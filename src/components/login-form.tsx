@@ -13,6 +13,8 @@ import authService from "@/services/authService"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 
+import { ModeToggle } from "@/components/mode-toggle"
+
 interface LoginFormProps extends React.ComponentProps<"div"> {
   onLoginSuccess?: () => void
 }
@@ -47,7 +49,10 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="overflow-hidden p-0">
+      <Card className="relative overflow-hidden p-0">
+        <div className="absolute right-4 top-4 z-10">
+          <ModeToggle />
+        </div>
         <CardContent className="grid min-h-[500px] p-0 md:grid-cols-2">
           <form 
             onSubmit={handleSubmit}

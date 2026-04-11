@@ -11,6 +11,7 @@ import { LoginPage } from "./components/login-page";
 import { AccountPage } from "./components/account-page";
 import { Toaster } from "./components/ui/sonner";
 import authService from "./services/authService";
+import { ThemeProvider } from "./components/theme-provider";
 
 const ProtectedRoute = ({ children, roles }: { children: React.ReactNode, roles?: string[] }) => {
   const currentUser = authService.getCurrentUser();
@@ -41,58 +42,60 @@ const DashboardWrapper = () => {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardWrapper />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<DashboardHome />} />
-          <Route 
-            path="users" 
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/dashboard"
             element={
-              <ProtectedRoute roles={["ADMIN"]}>
-                <UsersPage />
+              <ProtectedRoute>
+                <DashboardWrapper />
               </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="technicians" 
-            element={
-              <ProtectedRoute roles={["ADMIN"]}>
-                <TechnicalsPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="customers" 
-            element={
-              <ProtectedRoute roles={["ADMIN"]}>
-                <CustomersPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="vehicles" 
-            element={
-              <ProtectedRoute roles={["ADMIN"]}>
-                <VehiclesPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route path="orders" element={<ServiceOrdersPage />} />
-          <Route path="account" element={<AccountPage />} />
-        </Route>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-      <Toaster />
-    </Router>
+            }
+          >
+            <Route index element={<DashboardHome />} />
+            <Route 
+              path="users" 
+              element={
+                <ProtectedRoute roles={["ADMIN"]}>
+                  <UsersPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="technicians" 
+              element={
+                <ProtectedRoute roles={["ADMIN"]}>
+                  <TechnicalsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="customers" 
+              element={
+                <ProtectedRoute roles={["ADMIN"]}>
+                  <CustomersPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="vehicles" 
+              element={
+                <ProtectedRoute roles={["ADMIN"]}>
+                  <VehiclesPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="orders" element={<ServiceOrdersPage />} />
+            <Route path="account" element={<AccountPage />} />
+          </Route>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+        <Toaster />
+      </Router>
+    </ThemeProvider>
   );
 }
 

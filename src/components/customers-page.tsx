@@ -29,31 +29,39 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
-import { UserPlus, Trash2, Pencil, Mail, Phone, User as UserIcon } from "lucide-react"
+import {
+  UserPlus,
+  Trash2,
+  Pencil,
+  Mail,
+  Phone,
+  User as UserIcon,
+} from "lucide-react"
 import customerService from "@/services/customerService"
 import type { Customer, DTOCustomer } from "@/types"
 import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/errorHandler"
 
 export function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
-  
+
   // Form state
   const [formData, setFormData] = useState<DTOCustomer>({
     name: "",
     lastName: "",
     email: "",
-    phone: ""
+    phone: "",
   })
 
   const fetchCustomers = async () => {
     try {
       const data = await customerService.getAllCustomers()
       setCustomers(data)
-    } catch (error) {
-      toast.error("Error al cargar clientes")
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Error al cargar clientes"))
     } finally {
       setLoading(false)
     }
@@ -76,8 +84,8 @@ export function CustomersPage() {
       setIsDialogOpen(false)
       resetForm()
       fetchCustomers()
-    } catch (error) {
-      toast.error("Error al procesar la solicitud")
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Error al procesar la solicitud"))
     }
   }
 
@@ -86,8 +94,8 @@ export function CustomersPage() {
       await customerService.deleteCustomer(id)
       toast.success("Cliente eliminado")
       fetchCustomers()
-    } catch (error) {
-      toast.error("Error al eliminar cliente")
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Error al eliminar cliente"))
     }
   }
 
@@ -97,7 +105,7 @@ export function CustomersPage() {
       name: customer.name,
       lastName: customer.lastName,
       email: customer.email,
-      phone: customer.phone
+      phone: customer.phone,
     })
     setIsDialogOpen(true)
   }
@@ -108,7 +116,7 @@ export function CustomersPage() {
   }
 
   return (
-    <div className="space-y-6 flex flex-col h-full">
+    <div className="flex h-full flex-col space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Clientes</h2>
@@ -116,10 +124,13 @@ export function CustomersPage() {
             Registra y gestiona los datos de contacto de tus clientes.
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open)
-          if (!open) resetForm()
-        }}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open)
+            if (!open) resetForm()
+          }}
+        >
           <DialogTrigger asChild>
             <Button className="gap-2">
               <UserPlus className="size-4" />
@@ -128,7 +139,9 @@ export function CustomersPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>{editingCustomer ? 'Editar Cliente' : 'Crear Nuevo Cliente'}</DialogTitle>
+              <DialogTitle>
+                {editingCustomer ? "Editar Cliente" : "Crear Nuevo Cliente"}
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
@@ -138,7 +151,9 @@ export function CustomersPage() {
                     id="name"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -147,46 +162,54 @@ export function CustomersPage() {
                     id="lastName"
                     required
                     value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, lastName: e.target.value })
+                    }
                   />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Correo Electrónico</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Mail className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
                     required
                     className="pl-10"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                   />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Teléfono</Label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Phone className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="phone"
                     required
                     className="pl-10"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
                   />
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit">{editingCustomer ? 'Actualizar' : 'Guardar'}</Button>
+                <Button type="submit">
+                  {editingCustomer ? "Actualizar" : "Guardar"}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="rounded-md border bg-card flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden rounded-md border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -199,13 +222,16 @@ export function CustomersPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10">
+                <TableCell colSpan={4} className="py-10 text-center">
                   Cargando clientes...
                 </TableCell>
               </TableRow>
             ) : customers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">
+                <TableCell
+                  colSpan={4}
+                  className="py-10 text-center text-muted-foreground"
+                >
                   No hay clientes registrados.
                 </TableCell>
               </TableRow>
@@ -214,10 +240,12 @@ export function CustomersPage() {
                 <TableRow key={customer.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="bg-primary/10 p-2 rounded-full">
+                      <div className="rounded-full bg-primary/10 p-2">
                         <UserIcon className="size-4 text-primary" />
                       </div>
-                      <span className="font-medium">{customer.name} {customer.lastName}</span>
+                      <span className="font-medium">
+                        {customer.name} {customer.lastName}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -246,23 +274,29 @@ export function CustomersPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                           >
                             <Trash2 className="size-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>¿Confirmar eliminación?</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              ¿Confirmar eliminación?
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              Esta acción eliminará al cliente <span className="font-semibold text-foreground">{customer.name} {customer.lastName}</span> de forma permanente.
+                              Esta acción eliminará al cliente{" "}
+                              <span className="font-semibold text-foreground">
+                                {customer.name} {customer.lastName}
+                              </span>{" "}
+                              de forma permanente.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction 
+                            <AlertDialogAction
                               onClick={() => handleDelete(customer.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
                             >
                               Eliminar
                             </AlertDialogAction>

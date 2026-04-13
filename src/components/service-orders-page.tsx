@@ -61,6 +61,7 @@ import type {
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { getErrorMessage } from "@/lib/errorHandler"
 
 import authService from "@/services/authService"
 
@@ -119,8 +120,8 @@ export function ServiceOrdersPage() {
         oData = await orderService.getAllOrders()
       }
       setOrders(oData)
-    } catch (error) {
-      toast.error("Error al cargar datos")
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Error al cargar datos"))
     } finally {
       setLoading(false)
     }
@@ -155,8 +156,8 @@ export function ServiceOrdersPage() {
       setIsDialogOpen(false)
       resetForm()
       fetchData()
-    } catch (error) {
-      toast.error("Error al procesar la solicitud")
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Error al procesar la solicitud"))
     }
   }
 
@@ -165,8 +166,8 @@ export function ServiceOrdersPage() {
       await orderService.deleteOrder(id)
       toast.success("Orden eliminada")
       fetchData()
-    } catch (error) {
-      toast.error("Error al eliminar orden")
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Error al eliminar orden"))
     }
   }
 

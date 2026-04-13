@@ -42,6 +42,8 @@ import technicalService from "@/services/technicalService"
 import userService from "@/services/userService"
 import type { Technical, DTOTechnical, User } from "@/types"
 import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/errorHandler"
+import { hasRole } from "@/lib/userMapper"
 
 export function TechnicalsPage() {
   const [technicals, setTechnicals] = useState<Technical[]>([])
@@ -49,13 +51,13 @@ export function TechnicalsPage() {
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingTech, setEditingTech] = useState<Technical | null>(null)
-  
+
   // Form state
   const [formData, setFormData] = useState<DTOTechnical>({
     name: "",
     lastName: "",
     specialty: "",
-    userId: 0
+    userId: 0,
   })
 
   const fetchData = async () => {
@@ -63,25 +65,16 @@ export function TechnicalsPage() {
       setLoading(true)
       const [techsData, usersData] = await Promise.all([
         technicalService.getAllTechnicals(),
-        userService.getAllUsers()
+        userService.getAllUsers(),
       ])
       setTechnicals(techsData)
-      
+
       // Filtro robusto para usuarios con rol TECNICO
-      const technicalUsers = usersData.filter((u: any) => {
-        const authData = (u as any).authorities;
-        let roles: string[] = [];
-        if (typeof authData === 'string') {
-          roles = authData.replace(/[\[\]]/g, '').split(/[;,]/).map(r => r.trim());
-        } else if (Array.isArray(authData)) {
-          roles = authData.map((a: any) => typeof a === 'string' ? a : (a as any).name || (a as any).authority || "");
-        }
-        return roles.some((r: string) => r.includes("TECNICO"));
-      });
-      
-      setUsers(technicalUsers as any)
-    } catch (error) {
-      toast.error("Error al cargar datos")
+      const technicalUsers = usersData.filter((u) => hasRole(u, "TECNICO"))
+
+      setUsers(technicalUsers)
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Error al cargar datos"))
     } finally {
       setLoading(false)
     }
@@ -108,8 +101,8 @@ export function TechnicalsPage() {
       setIsDialogOpen(false)
       resetForm()
       fetchData()
-    } catch (error) {
-      toast.error("Error al procesar la solicitud")
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Error al procesar la solicitud"))
     }
   }
 
@@ -118,8 +111,8 @@ export function TechnicalsPage() {
       await technicalService.deleteTechnical(id)
       toast.success("Técnico eliminado")
       fetchData()
-    } catch (error) {
-      toast.error("Error al eliminar técnico")
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Error al eliminar técnico"))
     }
   }
 
@@ -129,7 +122,7 @@ export function TechnicalsPage() {
       name: tech.name,
       lastName: tech.lastName,
       specialty: tech.specialty,
-      userId: tech.user?.id || 0
+      userId: tech.user?.id || 0,
     })
     setIsDialogOpen(true)
   }
@@ -140,7 +133,7 @@ export function TechnicalsPage() {
   }
 
   return (
-    <div className="space-y-6 flex flex-col h-full">
+    <div className="flex h-full flex-col space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Técnicos</h2>
@@ -148,10 +141,13 @@ export function TechnicalsPage() {
             Maneja el perfil profesional y especialidad de tus mecánicos.
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open)
-          if (!open) resetForm()
-        }}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open)
+            if (!open) resetForm()
+          }}
+        >
           <DialogTrigger asChild>
             <Button className="gap-2">
               <UserIcon className="size-4" />
@@ -160,7 +156,9 @@ export function TechnicalsPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>{editingTech ? 'Editar Técnico' : 'Registrar Nuevo Técnico'}</DialogTitle>
+              <DialogTitle>
+                {editingTech ? "Editar Técnico" : "Registrar Nuevo Técnico"}
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
@@ -170,7 +168,9 @@ export function TechnicalsPage() {
                     id="name"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -179,21 +179,25 @@ export function TechnicalsPage() {
                     id="lastName"
                     required
                     value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, lastName: e.target.value })
+                    }
                   />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="specialty">Especialidad</Label>
                 <div className="relative">
-                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Briefcase className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="specialty"
                     required
                     placeholder="Ej: Motores, Frenos, Suspensión"
                     className="pl-10"
                     value={formData.specialty}
-                    onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, specialty: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -201,13 +205,15 @@ export function TechnicalsPage() {
                 <Label htmlFor="userId">Usuario Vinculado</Label>
                 <Select
                   value={formData.userId.toString()}
-                  onValueChange={(val) => setFormData({ ...formData, userId: parseInt(val) })}
+                  onValueChange={(val) =>
+                    setFormData({ ...formData, userId: parseInt(val) })
+                  }
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecciona un usuario técnico" />
                   </SelectTrigger>
                   <SelectContent>
-                    {users.map(user => (
+                    {users.map((user) => (
                       <SelectItem key={user.id} value={user.id.toString()}>
                         {user.email}
                       </SelectItem>
@@ -219,14 +225,16 @@ export function TechnicalsPage() {
                 </p>
               </div>
               <DialogFooter>
-                <Button type="submit">{editingTech ? 'Actualizar' : 'Registrar'}</Button>
+                <Button type="submit">
+                  {editingTech ? "Actualizar" : "Registrar"}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="rounded-md border bg-card flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden rounded-md border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -239,13 +247,16 @@ export function TechnicalsPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10">
+                <TableCell colSpan={4} className="py-10 text-center">
                   Cargando equipo técnico...
                 </TableCell>
               </TableRow>
             ) : technicals.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">
+                <TableCell
+                  colSpan={4}
+                  className="py-10 text-center text-muted-foreground"
+                >
                   No hay técnicos registrados.
                 </TableCell>
               </TableRow>
@@ -254,14 +265,19 @@ export function TechnicalsPage() {
                 <TableRow key={tech.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="bg-primary/10 p-2 rounded-full">
+                      <div className="rounded-full bg-primary/10 p-2">
                         <UserIcon className="size-4 text-primary" />
                       </div>
-                      <span className="font-medium">{tech.name} {tech.lastName}</span>
+                      <span className="font-medium">
+                        {tech.name} {tech.lastName}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="font-normal border-primary/30 text-primary bg-primary/5">
+                    <Badge
+                      variant="outline"
+                      className="border-primary/30 bg-primary/5 font-normal text-primary"
+                    >
                       {tech.specialty}
                     </Badge>
                   </TableCell>
@@ -285,23 +301,29 @@ export function TechnicalsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                           >
                             <Trash2 className="size-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>¿Confirmar eliminación?</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              ¿Confirmar eliminación?
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              Esta acción eliminará al técnico <span className="font-semibold text-foreground">{tech.name} {tech.lastName}</span> de forma permanente.
+                              Esta acción eliminará al técnico{" "}
+                              <span className="font-semibold text-foreground">
+                                {tech.name} {tech.lastName}
+                              </span>{" "}
+                              de forma permanente.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction 
+                            <AlertDialogAction
                               onClick={() => handleDelete(tech.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
                             >
                               Eliminar
                             </AlertDialogAction>

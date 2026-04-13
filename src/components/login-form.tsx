@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import authService from "@/services/authService"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
+import { getErrorMessage } from "@/lib/errorHandler"
 
 import { ModeToggle } from "@/components/mode-toggle"
 
@@ -38,10 +39,10 @@ export function LoginForm({
       if (onLoginSuccess) {
         onLoginSuccess()
       }
-    } catch (error: any) {
-      console.error("Login error:", error)
-      const message = error.response?.data?.message || "Credenciales incorrectas o error de servidor"
-      toast.error(message)
+    } catch (error: unknown) {
+      toast.error(
+        getErrorMessage(error, "Credenciales incorrectas o error de servidor")
+      )
     } finally {
       setIsLoading(false)
     }
@@ -50,11 +51,11 @@ export function LoginForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="relative overflow-hidden p-0">
-        <div className="absolute right-4 top-4 z-10">
+        <div className="absolute top-4 right-4 z-10">
           <ModeToggle />
         </div>
         <CardContent className="grid min-h-[500px] p-0 md:grid-cols-2">
-          <form 
+          <form
             onSubmit={handleSubmit}
             className="flex flex-col justify-center p-6 md:p-12 lg:p-16"
           >
@@ -89,12 +90,12 @@ export function LoginForm({
                     ¿Olvidaste tu contraseña?
                   </a>
                 </div>
-                <Input 
-                  id="password" 
-                  type="password" 
+                <Input
+                  id="password"
+                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required 
+                  required
                   disabled={isLoading}
                 />
               </Field>
@@ -129,4 +130,3 @@ export function LoginForm({
     </div>
   )
 }
-

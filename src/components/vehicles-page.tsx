@@ -36,11 +36,19 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
-import { Car, Trash2, Pencil, Calendar, Settings, User as UserIcon } from "lucide-react"
+import {
+  Car,
+  Trash2,
+  Pencil,
+  Calendar,
+  Settings,
+  User as UserIcon,
+} from "lucide-react"
 import vehicleService from "@/services/vehicleService"
 import customerService from "@/services/customerService"
 import type { Vehicle, DTOVehicle, Customer } from "@/types"
 import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/errorHandler"
 
 export function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -48,26 +56,26 @@ export function VehiclesPage() {
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
-  
+
   // Form state
   const [formData, setFormData] = useState<DTOVehicle>({
     plate: "",
     brand: "",
     model: "",
     year: new Date().getFullYear(),
-    customerId: 0
+    customerId: 0,
   })
 
   const fetchData = async () => {
     try {
       const [vData, cData] = await Promise.all([
         vehicleService.getAllVehicles(),
-        customerService.getAllCustomers()
+        customerService.getAllCustomers(),
       ])
       setVehicles(vData)
       setCustomers(cData)
-    } catch (error) {
-      toast.error("Error al cargar datos")
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Error al cargar datos"))
     } finally {
       setLoading(false)
     }
@@ -95,8 +103,8 @@ export function VehiclesPage() {
       setIsDialogOpen(false)
       resetForm()
       fetchData()
-    } catch (error) {
-      toast.error("Error al procesar la solicitud")
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Error al procesar la solicitud"))
     }
   }
 
@@ -105,8 +113,8 @@ export function VehiclesPage() {
       await vehicleService.deleteVehicle(id)
       toast.success("Vehículo eliminado")
       fetchData()
-    } catch (error) {
-      toast.error("Error al eliminar vehículo")
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Error al eliminar vehículo"))
     }
   }
 
@@ -117,24 +125,24 @@ export function VehiclesPage() {
       brand: vehicle.brand,
       model: vehicle.model,
       year: vehicle.year,
-      customerId: vehicle.customer?.id || 0
+      customerId: vehicle.customer?.id || 0,
     })
     setIsDialogOpen(true)
   }
 
   const resetForm = () => {
     setEditingVehicle(null)
-    setFormData({ 
-      plate: "", 
-      brand: "", 
-      model: "", 
-      year: new Date().getFullYear(), 
-      customerId: 0 
+    setFormData({
+      plate: "",
+      brand: "",
+      model: "",
+      year: new Date().getFullYear(),
+      customerId: 0,
     })
   }
 
   return (
-    <div className="space-y-6 flex flex-col h-full">
+    <div className="flex h-full flex-col space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Vehículos</h2>
@@ -142,10 +150,13 @@ export function VehiclesPage() {
             Gestiona la flota de vehículos de tus clientes.
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open)
-          if (!open) resetForm()
-        }}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open)
+            if (!open) resetForm()
+          }}
+        >
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Car className="size-4" />
@@ -154,7 +165,11 @@ export function VehiclesPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>{editingVehicle ? 'Editar Vehículo' : 'Registrar Nuevo Vehículo'}</DialogTitle>
+              <DialogTitle>
+                {editingVehicle
+                  ? "Editar Vehículo"
+                  : "Registrar Nuevo Vehículo"}
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
@@ -166,7 +181,12 @@ export function VehiclesPage() {
                     placeholder="ABC-123"
                     className="uppercase"
                     value={formData.plate}
-                    onChange={(e) => setFormData({ ...formData, plate: e.target.value.toUpperCase() })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        plate: e.target.value.toUpperCase(),
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -176,11 +196,16 @@ export function VehiclesPage() {
                     type="number"
                     required
                     value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        year: parseInt(e.target.value),
+                      })
+                    }
                   />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="brand">Marca</Label>
@@ -189,7 +214,9 @@ export function VehiclesPage() {
                     required
                     placeholder="Toyota"
                     value={formData.brand}
-                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, brand: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -199,16 +226,20 @@ export function VehiclesPage() {
                     required
                     placeholder="Corolla"
                     value={formData.model}
-                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, model: e.target.value })
+                    }
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="customer">Cliente (Dueño)</Label>
-                <Select 
-                  value={formData.customerId.toString()} 
-                  onValueChange={(val) => setFormData({ ...formData, customerId: parseInt(val) })}
+                <Select
+                  value={formData.customerId.toString()}
+                  onValueChange={(val) =>
+                    setFormData({ ...formData, customerId: parseInt(val) })
+                  }
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecciona un cliente" />
@@ -224,14 +255,16 @@ export function VehiclesPage() {
               </div>
 
               <DialogFooter>
-                <Button type="submit">{editingVehicle ? 'Actualizar' : 'Guardar'}</Button>
+                <Button type="submit">
+                  {editingVehicle ? "Actualizar" : "Guardar"}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="rounded-md border bg-card flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto rounded-md border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -244,13 +277,16 @@ export function VehiclesPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10">
+                <TableCell colSpan={4} className="py-10 text-center">
                   Cargando vehículos...
                 </TableCell>
               </TableRow>
             ) : vehicles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">
+                <TableCell
+                  colSpan={4}
+                  className="py-10 text-center text-muted-foreground"
+                >
                   No hay vehículos registrados.
                 </TableCell>
               </TableRow>
@@ -259,12 +295,16 @@ export function VehiclesPage() {
                 <TableRow key={vehicle.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="bg-primary/10 p-2 rounded-lg">
+                      <div className="rounded-lg bg-primary/10 p-2">
                         <Car className="size-5 text-primary" />
                       </div>
                       <div>
-                        <div className="font-bold text-lg leading-none">{vehicle.plate}</div>
-                        <div className="text-xs text-muted-foreground mt-1 capitalize">{vehicle.brand} {vehicle.model}</div>
+                        <div className="text-lg leading-none font-bold">
+                          {vehicle.plate}
+                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground capitalize">
+                          {vehicle.brand} {vehicle.model}
+                        </div>
                       </div>
                     </div>
                   </TableCell>
@@ -283,7 +323,9 @@ export function VehiclesPage() {
                   <TableCell>
                     <div className="flex items-center gap-1.5 text-sm font-medium">
                       <UserIcon className="size-3 text-muted-foreground" />
-                      {vehicle.customer ? `${vehicle.customer.name} ${vehicle.customer.lastName}` : "Desconocido"}
+                      {vehicle.customer
+                        ? `${vehicle.customer.name} ${vehicle.customer.lastName}`
+                        : "Desconocido"}
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
@@ -300,23 +342,29 @@ export function VehiclesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                           >
                             <Trash2 className="size-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>¿Confirmar eliminación?</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              ¿Confirmar eliminación?
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              Esta acción eliminará el vehículo con placa <span className="font-semibold text-foreground">{vehicle.plate}</span> de forma permanente.
+                              Esta acción eliminará el vehículo con placa{" "}
+                              <span className="font-semibold text-foreground">
+                                {vehicle.plate}
+                              </span>{" "}
+                              de forma permanente.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction 
+                            <AlertDialogAction
                               onClick={() => handleDelete(vehicle.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
                             >
                               Eliminar
                             </AlertDialogAction>

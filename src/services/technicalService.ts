@@ -1,5 +1,5 @@
 import api from "./api"
-import type { Technical, DTOTechnical } from "@/types"
+import type { Technical, DTOCreateTechnical, DTOTechnical } from "@/types"
 
 const technicalService = {
     getAllTechnicals: async (): Promise<Technical[]> => {
@@ -12,7 +12,11 @@ const technicalService = {
         return response.data
     },
 
-    createTechnical: async (technical: DTOTechnical): Promise<Technical> => {
+    /**
+     * Crea un técnico. El backend genera automáticamente un User con rol TECHNICAL,
+     * una contraseña temporal y envía un correo de invitación.
+     */
+    createTechnical: async (technical: DTOCreateTechnical): Promise<Technical> => {
         const response = await api.post<Technical>("/technicals", technical)
         return response.data
     },

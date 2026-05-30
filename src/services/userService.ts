@@ -1,6 +1,11 @@
 import api from "./api"
 import type { User, DTOUser } from "@/types"
 
+/**
+ * El backend solo expone GET / PUT / DELETE para /users.
+ * Los usuarios se crean a través de /auth/register-workshop (admin) y POST /technicals.
+ * El PUT ignora `authorities` (el rol no se cambia desde aquí).
+ */
 const userService = {
     getAllUsers: async (): Promise<User[]> => {
         const response = await api.get<User[]>("/users")
@@ -9,11 +14,6 @@ const userService = {
 
     getUser: async (id: number): Promise<User> => {
         const response = await api.get<User>(`/users/${id}`)
-        return response.data
-    },
-
-    createUser: async (user: DTOUser): Promise<User> => {
-        const response = await api.post<User>("/users/register", user)
         return response.data
     },
 

@@ -1,0 +1,32 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Design tokens — Workshop
+   Source of truth for motion, spacing rhythm, and other non-color primitives.
+   Colors live in index.css (:root / .dark).
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── Motion timing ─────────────────────────────────────────────────── */
+  --ease-expo:       cubic-bezier(0.16, 1, 0.3, 1);    /* reveals, page enter   */
+  --ease-out-quart:  cubic-bezier(0.25, 1, 0.5, 1);    /* hovers, transitions   */
+  --ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);/* small playful bounces */
+
+  --duration-fast:   120ms;   /* hover, focus, micro-state      */
+  --duration-normal: 200ms;   /* default transitions            */
+  --duration-slow:   350ms;   /* page/section reveals           */
+
+  /* ── Stack / section rhythm ────────────────────────────────────────────
+     Convention for vertical spacing in page layouts. Use Tailwind utilities
+     to apply them; documented here so reviewers can spot deviations.
+
+     Within a PageShell:
+       gap-6  → between major page sections (header, stats grid, content)
+       gap-4  → between cards inside a grid
+       gap-3  → inside a card / between related items
+       gap-2  → between label + input, icon + text
+       gap-1.5/gap-1 → micro spacing inside controls
+
+     Horizontal page padding: p-4 (mobile) / p-6 (desktop)
+     Card padding:            p-4 to p-5
+     Dialog padding:          p-6
+  ──────────────────────────────────────────────────────────────────────── */
+}

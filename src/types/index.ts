@@ -2,7 +2,7 @@
 //  ENUMS
 // ─────────────────────────────────────────────
 export type OrderStatus = 'PENDIENTE' | 'EN_PROCESO' | 'TERMINADO';
-export type UserRole = 'ADMIN' | 'TECNICO';
+export type UserRole = 'ADMIN' | 'TECHNICAL';
 
 // ─────────────────────────────────────────────
 //  AUTH
@@ -15,7 +15,66 @@ export interface LoginRequest {
 export interface LoginResponse {
     jwtToken: string;
     userId: number;
-    authorities: string; // "ADMIN" o "TECNICO"
+    authorities: string;          // "ADMIN" o "TECHNICAL" (separados por ";" si hay varios)
+    workshopId: number;
+    workshopName: string;
+    mustChangePassword: boolean;
+}
+
+export interface RegisterWorkshopRequest {
+    workshopName: string;
+    ownerName: string;
+    email: string;
+    password: string;
+    phone?: string;
+    address?: string;
+}
+
+export interface ChangePasswordRequest {
+    currentPassword: string;
+    newPassword: string;
+}
+
+export interface ForgotPasswordRequest {
+    email: string;
+}
+
+export interface ResetPasswordRequest {
+    token: string;
+    newPassword: string;
+}
+
+/** GET /auth/me → DTOMe en backend */
+export interface MeResponse {
+    userId: number;
+    email: string;
+    displayName: string;
+    authorities: string;
+    active: boolean;
+    mustChangePassword: boolean;
+    workshopId: number;
+    workshopName: string;
+}
+
+// ─────────────────────────────────────────────
+//  WORKSHOP
+// ─────────────────────────────────────────────
+export interface Workshop {
+    id: number;
+    workshopName: string;
+    ownerName: string;
+    email: string;
+    phone?: string;
+    address?: string;
+    plan?: string;
+    active?: boolean;
+}
+
+export interface UpdateWorkshopRequest {
+    workshopName: string;
+    ownerName: string;
+    phone?: string;
+    address?: string;
 }
 
 // ─────────────────────────────────────────────
@@ -30,7 +89,7 @@ export interface User {
     id: number;
     email: string;
     active: boolean;
-    authorities?: string; // "ADMIN" o "TECNICO" (separados por ";" si hay varios)
+    authorities?: string; // "ADMIN" o "TECHNICAL" (separados por ";" si hay varios)
 }
 
 export interface DTOUser {
@@ -38,7 +97,7 @@ export interface DTOUser {
     email: string;
     password: string;
     active?: boolean;
-    authorities: string; // "ADMIN" o "TECNICO"
+    authorities: string; // "ADMIN" o "TECHNICAL"
 }
 
 // ─────────────────────────────────────────────
@@ -77,7 +136,15 @@ export interface DTOTechnical {
     name: string;
     lastName: string;
     specialty: string;
-    userId: number; // FK al User del sistema
+    userId?: number; // FK al User del sistema (solo en respuestas / update)
+}
+
+/** POST /api/technicals — el backend crea el User TECHNICAL y envía contraseña temporal por email. */
+export interface DTOCreateTechnical {
+    name: string;
+    lastName: string;
+    specialty: string;
+    email: string;
 }
 
 // ─────────────────────────────────────────────

@@ -9,7 +9,7 @@ export function mapUserRoles(user: User | null | undefined): UserRole[] {
     return user.authorities
       .split(";")
       .map((r) => r.trim() as UserRole)
-      .filter((r) => r === "ADMIN" || r === "TECNICO")
+      .filter((r) => r === "ADMIN" || r === "TECHNICAL")
   }
 
   return []
@@ -25,7 +25,7 @@ export function hasRole(user: User | null | undefined, role: UserRole): boolean 
 export function getPrimaryRole(user: User | null | undefined): string {
   const roles = mapUserRoles(user)
   if (roles.includes("ADMIN")) return "Administrador"
-  if (roles.includes("TECNICO")) return "Técnico"
+  if (roles.includes("TECHNICAL")) return "Técnico"
   return "Sin Rol"
 }
 

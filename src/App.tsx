@@ -1,34 +1,67 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { DashboardView } from "./components/dashboard-view";
-import { DashboardHome } from "./components/dashboard-home";
-import { UsersPage } from "./components/users-page";
-import { TechnicalsPage } from "./components/technicals-page";
-import { CustomersPage } from "./components/customers-page";
-import { VehiclesPage } from "./components/vehicles-page";
-import { ServiceOrdersPage } from "./components/service-orders-page";
-import { LoginPage } from "./components/login-page";
-import { AccountPage } from "./components/account-page";
 import { Toaster } from "./components/ui/sonner";
 import authService from "./services/authService";
 import { ThemeProvider } from "./components/theme-provider";
+import { SessionGate } from "./components/auth/session-gate";
+
+// Code-split every routed screen so the initial bundle stays small. The
+// dashboard shell (DashboardView) stays eager; its leaf pages resolve under a
+// nested Suspense so the sidebar/header never flash while a chunk loads.
+const LandingPage = lazy(() => import("./pages/landing"));
+const LoginPage = lazy(() => import("./pages/login"));
+const SignupPage = lazy(() => import("./pages/signup"));
+const ForgotPasswordPage = lazy(() => import("./pages/forgot-password"));
+const ResetPasswordPage = lazy(() => import("./pages/reset-password"));
+const ChangePasswordPage = lazy(() => import("./pages/change-password"));
+const NotFoundPage = lazy(() => import("./pages/not-found"));
+
+const DashboardHome = lazy(() => import("./pages/dashboard/home"));
+const AccountPage = lazy(() => import("./pages/dashboard/account"));
+const UsersPage = lazy(() => import("./pages/dashboard/users"));
+const TechnicalsPage = lazy(() => import("./pages/dashboard/technicians"));
+const CustomersPage = lazy(() => import("./pages/dashboard/customers"));
+const VehiclesPage = lazy(() => import("./pages/dashboard/vehicles"));
+const ServiceOrdersPage = lazy(() => import("./pages/dashboard/orders"));
+
+const FullScreenFallback = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background">
+    <Loader2 className="size-6 animate-spin text-muted-foreground" />
+  </div>
+);
 
 const ProtectedRoute = ({ children, roles }: { children: React.ReactNode, roles?: string[] }) => {
-  const currentUser = authService.getCurrentUser();
   const location = useLocation();
 
   if (!authService.isAuthenticated()) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (roles && !roles.some(role => currentUser.roles.includes(role))) {
-    return <Navigate to="/dashboard" replace />;
+  // Forzar cambio de contraseña antes de acceder a cualquier ruta protegida
+  if (
+    authService.mustChangePassword() &&
+    location.pathname !== "/change-password"
+  ) {
+    return <Navigate to="/change-password" replace />;
   }
 
+  return (
+    <SessionGate>
+      <RoleGate roles={roles}>{children}</RoleGate>
+    </SessionGate>
+  );
+};
+
+const RoleGate = ({ children, roles }: { children: React.ReactNode; roles?: string[] }) => {
+  const currentUser = authService.getCurrentUser();
+  if (roles && !roles.some((role) => currentUser.roles.includes(role))) {
+    return <Navigate to="/dashboard" replace />;
+  }
   return <>{children}</>;
 };
 
-// Componente para manejar la lógica de logout y proveer el layout
 const DashboardWrapper = () => {
   const navigate = useNavigate();
 
@@ -44,56 +77,69 @@ function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <Router>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardWrapper />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<DashboardHome />} />
-            <Route 
-              path="users" 
+        <Suspense fallback={<FullScreenFallback />}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route
+              path="/change-password"
               element={
-                <ProtectedRoute roles={["ADMIN"]}>
-                  <UsersPage />
+                <ProtectedRoute>
+                  <ChangePasswordPage />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="technicians" 
+            <Route
+              path="/dashboard"
               element={
-                <ProtectedRoute roles={["ADMIN"]}>
-                  <TechnicalsPage />
+                <ProtectedRoute>
+                  <DashboardWrapper />
                 </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="customers" 
-              element={
-                <ProtectedRoute roles={["ADMIN"]}>
-                  <CustomersPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="vehicles" 
-              element={
-                <ProtectedRoute roles={["ADMIN"]}>
-                  <VehiclesPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="orders" element={<ServiceOrdersPage />} />
-            <Route path="account" element={<AccountPage />} />
-          </Route>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-        <Toaster />
+              }
+            >
+              <Route index element={<DashboardHome />} />
+              <Route
+                path="users"
+                element={
+                  <ProtectedRoute roles={["ADMIN"]}>
+                    <UsersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="technicians"
+                element={
+                  <ProtectedRoute roles={["ADMIN"]}>
+                    <TechnicalsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="customers"
+                element={
+                  <ProtectedRoute roles={["ADMIN", "TECHNICAL"]}>
+                    <CustomersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="vehicles"
+                element={
+                  <ProtectedRoute roles={["ADMIN", "TECHNICAL"]}>
+                    <VehiclesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="orders" element={<ServiceOrdersPage />} />
+              <Route path="account" element={<AccountPage />} />
+            </Route>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+        <Toaster position="top-right" richColors closeButton />
       </Router>
     </ThemeProvider>
   );

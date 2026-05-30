@@ -11,4 +11,16 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Split rarely-changing vendor libs into their own long-cached chunk,
+        // separate from app code that ships often.
+        manualChunks: {
+          "react-vendor": ["react", "react-dom", "react-router-dom"],
+          motion: ["motion"],
+        },
+      },
+    },
+  },
 })

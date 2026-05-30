@@ -15,7 +15,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { EllipsisVertical, CircleUserRound, LogOut } from "lucide-react"
+import { ChevronsUpDown, CircleUserRound, LogOut } from "lucide-react"
+
+const ROLE_LABEL: Record<string, string> = {
+  ADMIN: "Administrador",
+  TECHNICAL: "Técnico",
+}
 
 export function NavUser({
   user,
@@ -30,6 +35,8 @@ export function NavUser({
   onLogout?: () => void
 }) {
   const { isMobile } = useSidebar()
+  const initials = user.name.substring(0, 2).toUpperCase()
+  const roleLabel = ROLE_LABEL[user.roles?.[0] || ""] || "Usuario"
 
   return (
     <SidebarMenu>
@@ -38,66 +45,67 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="h-12 gap-2.5 rounded-lg px-2 transition-colors duration-150 hover:bg-sidebar-accent/70 data-[state=open]:bg-sidebar-accent"
             >
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
+              <Avatar className="size-7 rounded-md">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">
-                  {user.name.substring(0, 2).toUpperCase()}
+                <AvatarFallback className="rounded-md bg-brand-subtle text-[10.5px] font-semibold text-brand">
+                  {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold uppercase text-[11px] tracking-wider">
-                  {user.roles?.[0] || "USUARIO"}
+              <div className="grid min-w-0 flex-1 text-left leading-tight">
+                <span className="truncate text-[13px] font-semibold text-foreground">
+                  {roleLabel}
                 </span>
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="truncate text-[11px] text-sidebar-foreground/60">
                   {user.email}
                 </span>
               </div>
-              <EllipsisVertical className="ml-auto size-4" />
+              <ChevronsUpDown className="ml-auto size-3.5 shrink-0 text-sidebar-foreground/40" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg border-border/80 shadow-elevated"
             side={isMobile ? "bottom" : "right"}
             align="end"
-            sideOffset={4}
+            sideOffset={6}
           >
             <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
+              <div className="flex items-center gap-2.5 px-2 py-2 text-left">
+                <Avatar className="size-9 rounded-md">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">
-                    {user.name.substring(0, 2).toUpperCase()}
+                  <AvatarFallback className="rounded-md bg-brand-subtle text-xs font-semibold text-brand">
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="truncate font-semibold uppercase tracking-tight">
-                      {user.roles?.[0] || "USUARIO"}
-                    </span>
-                    <span className="truncate text-xs text-muted-foreground/90 font-medium">
-                      {user.email}
-                    </span>
-                  </div>
+                <div className="grid min-w-0 flex-1 leading-tight">
+                  <span className="truncate text-[13px] font-semibold text-foreground">
+                    {roleLabel}
+                  </span>
+                  <span className="truncate text-[11.5px] text-muted-foreground">
+                    {user.email}
+                  </span>
                 </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link to="/dashboard/account" className="flex w-full items-center">
-                  <CircleUserRound className="mr-2" />
-                  Cuenta
+                <Link
+                  to="/dashboard/account"
+                  className="flex w-full items-center gap-2 text-[13px]"
+                >
+                  <CircleUserRound className="size-4 text-muted-foreground" />
+                  Mi cuenta
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={onLogout}
-              className="text-destructive focus:text-destructive"
+              className="gap-2 text-[13px] text-destructive focus:bg-destructive/10 focus:text-destructive"
             >
-              <LogOut />
+              <LogOut className="size-4" />
               Cerrar sesión
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -41,6 +41,8 @@ import { DataToolbar } from "@/components/data/data-toolbar"
 import { RowActions } from "@/components/data/row-actions"
 import { ConfirmDialog } from "@/components/data/confirm-dialog"
 import { useTableFilter } from "@/hooks/use-table-filter"
+import { usePagination } from "@/hooks/use-pagination"
+import { DataPagination } from "@/components/data/data-pagination"
 
 type TechnicalFormState = {
   name: string
@@ -90,6 +92,7 @@ export default function TechnicalsPage() {
     technicals,
     getSearchable,
   )
+  const pagination = usePagination(filtered, { resetKey: query })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -288,13 +291,13 @@ export default function TechnicalsPage() {
         count={loading ? undefined : filtered.length}
       />
 
-      <div className="overflow-hidden rounded-xl border border-border/80 bg-card">
+      <div className="scroll-mt-16 overflow-hidden rounded-xl border border-border/80 bg-card">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Técnico</TableHead>
-              <TableHead>Especialidad</TableHead>
-              <TableHead>Correo</TableHead>
+              <TableHead className="hidden sm:table-cell">Especialidad</TableHead>
+              <TableHead className="hidden md:table-cell">Correo</TableHead>
               <TableHead className="w-[60px] text-right">
                 <span className="sr-only">Acciones</span>
               </TableHead>
@@ -318,27 +321,30 @@ export default function TechnicalsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((tech) => (
+              pagination.pageItems.map((tech) => (
                 <TableRow key={tech.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-subtle text-[11px] font-semibold text-brand">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-[11px] font-semibold text-secondary-foreground">
                         {initials(tech.name, tech.lastName)}
                       </div>
-                      <span className="font-medium">
-                        {tech.name} {tech.lastName}
-                      </span>
+                      <div className="min-w-0">
+                        <span className="font-medium">
+                          {tech.name} {tech.lastName}
+                        </span>
+                        <div className="text-caption truncate md:hidden">
+                          <span className="sm:hidden">{tech.specialty} · </span>
+                          {tech.user?.email ?? "Sin usuario"}
+                        </div>
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className="border-brand/25 bg-brand/[0.06] font-normal text-brand"
-                    >
+                  <TableCell className="hidden sm:table-cell">
+                    <Badge variant="secondary" className="font-normal">
                       {tech.specialty}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
                       <Mail className="size-3 shrink-0" />
                       {tech.user?.email ?? "Sin usuario"}
@@ -367,6 +373,14 @@ export default function TechnicalsPage() {
             )}
           </TableBody>
         </Table>
+        <DataPagination
+          page={pagination.page}
+          pageCount={pagination.pageCount}
+          start={pagination.start}
+          end={pagination.end}
+          total={pagination.total}
+          onPageChange={pagination.setPage}
+        />
       </div>
 
       <ConfirmDialog

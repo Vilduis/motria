@@ -1,19 +1,13 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
+import axios from "axios"
+import { ArrowRight, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { AuthField } from "@/components/auth/auth-field"
 import authService from "@/services/authService"
-import { toast } from "sonner"
-import { Loader2, ArrowRight } from "lucide-react"
 import { getErrorMessage } from "@/lib/errorHandler"
 
 interface LoginFormProps extends React.ComponentProps<"div"> {
@@ -30,124 +24,152 @@ export function LoginForm({
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [emailTouched, setEmailTouched] = useState(false)
+  const [touched, setTouched] = useState({ email: false, password: false })
+  const [serverError, setServerError] = useState("")
+  const pending = useRef(false)
+  const formRef = useRef<HTMLFormElement>(null)
+  const errorRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (serverError) errorRef.current?.focus()
+  }, [serverError])
+  const emailError = !email.trim()
+    ? "Introduce tu correo electrónico."
+    : !EMAIL_RE.test(email.trim())
+      ? "Introduce un correo válido."
+      : undefined
+  const passwordError = !password ? "Introduce tu contraseña." : undefined
 
-  const emailError =
-    emailTouched && email.length > 0 && !EMAIL_RE.test(email)
-      ? "Introduce un correo válido"
-      : null
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setEmailTouched(true)
-    if (!EMAIL_RE.test(email)) return
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (pending.current) return
+    setTouched({ email: true, password: true })
+    setServerError("")
+    if (emailError || passwordError) {
+      const field = emailError ? "email" : "password"
+      ;(formRef.current?.elements.namedItem(field) as HTMLInputElement)?.focus()
+      return
+    }
+    pending.current = true
     setIsLoading(true)
     try {
-      const data = await authService.login({ email, password })
+      const data = await authService.login({ email: email.trim(), password })
       toast.success(
         data.workshopName
           ? `Bienvenido a ${data.workshopName}`
-          : "Bienvenido de nuevo",
+          : "Bienvenido de nuevo"
       )
       onLoginSuccess?.(Boolean(data.mustChangePassword))
     } catch (error: unknown) {
-      toast.error(
-        getErrorMessage(error, "Credenciales incorrectas o error de servidor"),
+      setServerError(
+        axios.isAxiosError(error) && error.response?.status === 401
+          ? "El correo o la contraseña no son correctos. Revisa tus datos e inténtalo de nuevo."
+          : axios.isAxiosError(error) && !error.response
+            ? "No pudimos conectar. Comprueba tu conexión e inténtalo de nuevo."
+            : getErrorMessage(
+                error,
+                "No pudimos iniciar sesión. Inténtalo de nuevo."
+              )
       )
     } finally {
+      pending.current = false
       setIsLoading(false)
     }
   }
 
   return (
-    <Card
-      className={cn("w-full gap-0 py-0 shadow-elevated", className)}
-      {...props}
-    >
-      <CardHeader className="px-7 pb-1 pt-7">
-        <CardTitle className="text-h1">Inicia sesión</CardTitle>
-        <CardDescription>
-          Accede al panel de control de tu taller.
-        </CardDescription>
+    <Card className={cn("motria-auth-card", className)} {...props}>
+      <CardHeader className="gap-0 px-0">
+        <h1 className="motria-heading motria-auth-title">
+          Qué bueno verte de nuevo.
+        </h1>
+        <p className="motria-auth-intro">
+          Inicia sesión y sigue con el día a día de tu taller.
+        </p>
       </CardHeader>
-
-      <CardContent className="px-7 pb-7 pt-6">
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Correo electrónico</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="tu@taller.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onBlur={() => setEmailTouched(true)}
-              aria-invalid={emailError ? true : undefined}
-              aria-describedby={emailError ? "email-error" : undefined}
-              required
-              disabled={isLoading}
-              autoComplete="email"
-              autoFocus
-            />
-            {emailError && (
-              <p
-                id="email-error"
-                className="text-[12px] text-destructive"
-                role="alert"
-              >
-                {emailError}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Contraseña</Label>
+      <CardContent className="px-0">
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          className="motria-auth-form space-y-6"
+          noValidate
+          aria-busy={isLoading}
+        >
+          {serverError && (
+            <div
+              ref={errorRef}
+              role="alert"
+              tabIndex={-1}
+              className="motria-auth-server-error"
+            >
+              {serverError}
+            </div>
+          )}
+          <AuthField
+            id="email"
+            label="Correo electrónico"
+            type="email"
+            placeholder="tu@taller.com"
+            value={email}
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            required
+            disabled={isLoading}
+            onChange={(event) => {
+              setEmail(event.target.value)
+              setServerError("")
+            }}
+            onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
+            error={touched.email ? emailError : undefined}
+          />
+          <AuthField
+            id="password"
+            label="Contraseña"
+            type="password"
+            placeholder="Tu contraseña"
+            value={password}
+            autoComplete="current-password"
+            required
+            disabled={isLoading}
+            onChange={(event) => {
+              setPassword(event.target.value)
+              setServerError("")
+            }}
+            onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
+            error={touched.password ? passwordError : undefined}
+            trailing={
               <Link
                 to="/forgot-password"
-                className="text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+                className="motria-auth-link py-1 text-xs"
               >
                 ¿Olvidaste tu contraseña?
               </Link>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-              autoComplete="current-password"
-            />
-          </div>
-
+            }
+          />
+          <p role="status" className="sr-only">
+            {isLoading ? "Iniciando sesión…" : ""}
+          </p>
           <Button
             type="submit"
-            className="mt-2 h-10 w-full gap-1.5"
+            className="motria-auth-submit"
             disabled={isLoading}
           >
-            {isLoading ? (
-              <>
+            <span>
+              {isLoading ? "Iniciando sesión…" : "Iniciar sesión"}
+            </span>
+            <span className="motria-auth-submit-icon" aria-hidden="true">
+              {isLoading ? (
                 <Loader2 className="size-4 animate-spin" />
-                Iniciando sesión…
-              </>
-            ) : (
-              <>
-                Iniciar sesión
+              ) : (
                 <ArrowRight className="size-4" />
-              </>
-            )}
+              )}
+            </span>
           </Button>
         </form>
-
-        <p className="mt-6 text-[13px] text-muted-foreground">
-          ¿No tienes cuenta?{" "}
-          <Link
-            to="/signup"
-            className="font-medium text-foreground underline-offset-4 transition-colors hover:text-brand hover:underline"
-          >
-            Regístrate
+        <p className="motria-auth-switch">
+          ¿Aún no usas Motria?{" "}
+          <Link to="/signup" className="motria-auth-link">
+            Crea tu cuenta
           </Link>
         </p>
       </CardContent>

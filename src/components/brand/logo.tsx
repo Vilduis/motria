@@ -22,58 +22,12 @@ export function LogoMark({
       {...props}
     >
       <path
-        d="M3 6 L7.5 19 L12 9 L16.5 19 L21 6"
+        d="M3 19 L7.5 5 L12 15 L16.5 5 L21 19"
         stroke="currentColor"
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>
-  )
-}
-
-interface LogoProps {
-  size?: "xs" | "sm" | "md" | "lg"
-  className?: string
-  markClassName?: string
-  textClassName?: string
-  showText?: boolean
-  text?: string
-}
-
-const SIZE_MAP = {
-  xs: { mark: 14, gap: "gap-1.5", text: "text-[13px]" },
-  sm: { mark: 16, gap: "gap-2", text: "text-sm" },
-  md: { mark: 18, gap: "gap-2", text: "text-[15px]" },
-  lg: { mark: 22, gap: "gap-2.5", text: "text-base" },
-} as const
-
-export function Logo({
-  size = "md",
-  className,
-  markClassName,
-  textClassName,
-  showText = true,
-  text = "Workshop",
-}: LogoProps) {
-  const s = SIZE_MAP[size]
-  return (
-    <span className={cn("inline-flex items-center", s.gap, className)}>
-      <LogoMark
-        size={s.mark}
-        className={cn("text-brand", markClassName)}
-      />
-      {showText && (
-        <span
-          className={cn(
-            "font-heading font-semibold tracking-[-0.01em] text-foreground",
-            s.text,
-            textClassName,
-          )}
-        >
-          {text}
-        </span>
-      )}
-    </span>
   )
 }

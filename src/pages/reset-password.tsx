@@ -1,20 +1,13 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
-import { AuthShell } from "@/components/layout/auth-shell"
-import { PasswordStrength } from "@/components/auth/password-strength"
-import authService from "@/services/authService"
-import { toast } from "sonner"
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { AuthField } from "@/components/auth/auth-field"
+import { PasswordStrength } from "@/components/auth/password-strength"
+import { MotriaAuthShell } from "@/components/layout/motria-auth-shell"
+import authService from "@/services/authService"
 import { getErrorMessage } from "@/lib/errorHandler"
 
 export default function ResetPasswordPage() {
@@ -26,28 +19,34 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const formRef = useRef<HTMLFormElement>(null)
 
   if (!token) {
     return <Navigate to="/forgot-password" replace />
   }
 
   const passwordError =
-    touched.newPassword && newPassword.length > 0 && newPassword.length < 8
-      ? "Mínimo 8 caracteres"
-      : null
+    touched.newPassword && newPassword.length < 8
+      ? "Usa al menos 8 caracteres."
+      : undefined
 
   const confirmError =
-    touched.confirmPassword &&
-    confirmPassword.length > 0 &&
-    confirmPassword !== newPassword
-      ? "Las contraseñas no coinciden"
-      : null
+    touched.confirmPassword && confirmPassword !== newPassword
+      ? "Las contraseñas no coinciden."
+      : undefined
+
+  const passwordsMatch =
+    confirmPassword.length > 0 && confirmPassword === newPassword
+
+  const focusField = (name: string) =>
+    (formRef.current?.elements.namedItem(name) as HTMLInputElement)?.focus()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isLoading) return
     setTouched({ newPassword: true, confirmPassword: true })
-    if (newPassword.length < 8) return
-    if (newPassword !== confirmPassword) return
+    if (newPassword.length < 8) return focusField("newPassword")
+    if (newPassword !== confirmPassword) return focusField("confirmPassword")
 
     setIsLoading(true)
     try {
@@ -64,121 +63,97 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <AuthShell showBrand>
-      <Card className="w-full gap-0 py-0 shadow-elevated">
-        <CardHeader className="px-7 pb-1 pt-7">
-          <CardTitle className="text-h1">Nueva contraseña</CardTitle>
-          <CardDescription>
+    <MotriaAuthShell variant="reset-password">
+      <Card className="motria-auth-card">
+        <CardHeader className="gap-0 px-0">
+          <h1 className="motria-heading motria-auth-title">
+            Nueva contraseña
+          </h1>
+          <p className="motria-auth-intro">
             Elige una contraseña fuerte que no uses en otros sitios.
-          </CardDescription>
+          </p>
         </CardHeader>
-
-        <CardContent className="px-7 pb-7 pt-6">
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <div className="space-y-1.5">
-              <Label htmlFor="newPassword">Nueva contraseña</Label>
-              <Input
+        <CardContent className="px-0">
+          <form
+            ref={formRef}
+            onSubmit={handleSubmit}
+            className="motria-auth-form space-y-6"
+            noValidate
+            aria-busy={isLoading}
+          >
+            <div className="space-y-3">
+              <AuthField
                 id="newPassword"
+                label="Nueva contraseña"
                 type="password"
-                placeholder="Mín. 8 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                onBlur={() =>
-                  setTouched((p) => ({ ...p, newPassword: true }))
-                }
-                aria-invalid={passwordError ? true : undefined}
-                aria-describedby={
-                  passwordError ? "password-error" : "password-strength"
-                }
+                onBlur={() => setTouched((p) => ({ ...p, newPassword: true }))}
+                error={passwordError}
+                aria-describedby="password-strength"
                 required
                 disabled={isLoading}
                 autoComplete="new-password"
                 autoFocus
               />
+              <PasswordStrength password={newPassword} id="password-strength" />
             </div>
 
-            <PasswordStrength
-              password={newPassword}
-              id="password-strength"
-            />
-
-            <div className="space-y-1.5">
-              <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
-              <Input
+            <div className="space-y-2">
+              <AuthField
                 id="confirmPassword"
+                label="Confirmar contraseña"
                 type="password"
-                placeholder="Repetir contraseña"
+                placeholder="Repite la contraseña"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 onBlur={() =>
                   setTouched((p) => ({ ...p, confirmPassword: true }))
                 }
-                aria-invalid={confirmError ? true : undefined}
-                aria-describedby={confirmError ? "confirm-error" : undefined}
+                error={confirmError}
                 required
                 disabled={isLoading}
                 autoComplete="new-password"
               />
-            </div>
-
-            {passwordError && (
-              <p
-                id="password-error"
-                className="text-[12px] text-destructive"
-                role="alert"
-              >
-                {passwordError}
-              </p>
-            )}
-            {confirmError && (
-              <p
-                id="confirm-error"
-                className="text-[12px] text-destructive"
-                role="alert"
-              >
-                {confirmError}
-              </p>
-            )}
-            {!passwordError &&
-              !confirmError &&
-              confirmPassword.length > 0 &&
-              confirmPassword === newPassword && (
-                <p className="flex items-center gap-1 text-[12px] text-status-done">
-                  <Check className="size-3.5" />
+              {!confirmError && passwordsMatch && (
+                <p className="flex items-center gap-1.5 text-xs text-status-done">
+                  <Check className="size-3.5" aria-hidden="true" />
                   Las contraseñas coinciden
                 </p>
               )}
+            </div>
 
+            <p role="status" className="sr-only">
+              {isLoading ? "Actualizando contraseña…" : ""}
+            </p>
             <Button
               type="submit"
-              className="mt-2 h-10 w-full gap-1.5"
+              className="motria-auth-submit"
               disabled={isLoading}
             >
-              {isLoading ? (
-                <>
+              <span>{isLoading ? "Actualizando…" : "Actualizar contraseña"}</span>
+              <span className="motria-auth-submit-icon" aria-hidden="true">
+                {isLoading ? (
                   <Loader2 className="size-4 animate-spin" />
-                  Actualizando…
-                </>
-              ) : (
-                <>
-                  Actualizar contraseña
+                ) : (
                   <ArrowRight className="size-4" />
-                </>
-              )}
+                )}
+              </span>
             </Button>
           </form>
 
-          <p className="mt-6 text-[13px] text-muted-foreground">
+          <p className="motria-auth-switch">
             <Link
               to="/login"
-              className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
+              className="motria-auth-link inline-flex min-h-11 items-center gap-2"
             >
-              <ArrowLeft className="size-3.5" />
+              <ArrowLeft className="size-4" aria-hidden="true" />
               Volver a iniciar sesión
             </Link>
           </p>
         </CardContent>
       </Card>
-    </AuthShell>
+    </MotriaAuthShell>
   )
 }

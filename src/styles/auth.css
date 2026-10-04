@@ -1,0 +1,328 @@
+@import "./motria-theme.css";
+
+.motria-auth {
+  --destructive: #b51d31;
+  --status-done: #216b48;
+  --status-pending: #89590d;
+  display: grid;
+  min-height: 100svh;
+  caret-color: var(--primary);
+}
+
+.motria-auth ::selection {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.motria-auth :where(a, button):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
+
+.motria-auth-skip {
+  position: fixed;
+  z-index: 50;
+  top: 0.75rem;
+  left: 0.75rem;
+  transform: translateY(-200%);
+  border-radius: 0.5rem;
+  background: var(--background);
+  padding: 0.75rem 1rem;
+  color: var(--foreground);
+}
+.motria-auth-skip:focus {
+  transform: translateY(0);
+}
+
+.motria-auth-aside {
+  display: none;
+}
+.motria-auth-panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+.motria-auth-header,
+.motria-auth-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem clamp(1.25rem, 4vw, 3.5rem);
+}
+.motria-auth-header {
+  min-height: 6rem;
+}
+.motria-auth-header .motria-wordmark {
+  font-size: 2rem;
+}
+.motria-auth-header .motria-mark {
+  width: 2rem;
+  height: 2rem;
+}
+.motria-auth-header .motria-mark svg {
+  width: 1.25rem;
+}
+.motria-auth-back,
+.motria-auth-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+}
+.motria-auth-back {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+.motria-auth :where(.motria-auth-back, .motria-auth-footer a):hover {
+  color: var(--primary);
+}
+.motria-auth-main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem clamp(1.25rem, 5vw, 5rem) 3rem;
+  outline: none;
+}
+.motria-auth-footer {
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+}
+.motria-auth .motria-auth-card {
+  width: 100%;
+  max-width: 28rem;
+  overflow: visible;
+  gap: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+.motria-auth .motria-auth-card-signup {
+  max-width: 32rem;
+}
+.motria-auth-title {
+  font-size: clamp(2.5rem, 4vw, 3.25rem);
+  line-height: 1.05;
+}
+.motria-auth-intro {
+  margin-top: 0.75rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.75;
+}
+.motria-auth-form {
+  margin-top: 2rem;
+}
+.motria-auth [data-slot="label"] {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.motria-auth [data-slot="input"] {
+  height: 3rem;
+  border-color: #8a8c92;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 1rem;
+  box-shadow: none;
+}
+.motria-auth [data-slot="input"]::placeholder {
+  color: var(--muted-foreground);
+  opacity: 1;
+}
+.motria-auth [data-slot="input"]:hover {
+  border-color: var(--muted-foreground);
+}
+.motria-auth [data-slot="input"]:focus-visible {
+  border-color: var(--primary);
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.motria-auth [data-slot="input"][aria-invalid="true"] {
+  border-color: var(--destructive);
+}
+.motria-auth [data-slot="input"]:disabled {
+  opacity: 0.65;
+  background: var(--muted);
+}
+.motria-auth .motria-password-toggle {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--muted-foreground);
+}
+.motria-auth .motria-password-toggle:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+.motria-auth-link {
+  color: var(--primary);
+  font-weight: 600;
+  text-underline-offset: 4px;
+}
+.motria-auth-link:hover {
+  color: var(--accent-foreground);
+  text-decoration: underline;
+}
+.motria-auth-error {
+  color: var(--destructive);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.motria-auth-server-error {
+  border: 1px solid var(--destructive);
+  border-radius: 0.5rem;
+  background: var(--accent);
+  padding: 0.875rem 1rem;
+  color: var(--destructive);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.motria-auth .motria-auth-submit {
+  display: flex;
+  width: 100%;
+  height: 3.25rem;
+  justify-content: space-between;
+  border-radius: 999px;
+  background: var(--primary);
+  padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+  color: var(--primary-foreground);
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: none;
+}
+.motria-auth .motria-auth-submit:hover {
+  background: var(--accent-foreground);
+}
+.motria-auth .motria-auth-submit:disabled {
+  opacity: 0.7;
+}
+.motria-auth .motria-auth-submit.motria-auth-submit-blocked {
+  background: var(--muted);
+  color: var(--muted-foreground);
+  opacity: 1;
+}
+.motria-auth-submit-blocked .motria-auth-submit-icon {
+  border-color: var(--input);
+}
+.motria-auth-submit-icon {
+  display: flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.5);
+  border-radius: 50%;
+}
+.motria-auth-switch {
+  margin-top: 1.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.75;
+  color: var(--muted-foreground);
+}
+.motria-auth-legend {
+  margin-bottom: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.motria-auth-recovery-note {
+  margin-block: 1.5rem;
+  border-block: 1px solid var(--border);
+  padding-block: 1rem;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  line-height: 1.75;
+}
+
+@media (min-width: 1024px) {
+  .motria-auth {
+    grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+  }
+  .motria-auth-aside {
+    position: sticky;
+    top: 0;
+    display: flex;
+    height: 100svh;
+    min-height: 40rem;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    padding: 3rem clamp(2rem, 4vw, 4rem);
+    background: #191b20;
+    color: white;
+  }
+  .motria-auth-photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 58% center;
+  }
+  .motria-auth-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgb(15 18 21 / 0.5),
+      rgb(15 18 21 / 0.45) 20%,
+      rgb(15 18 21 / 0.86) 75%,
+      #191b20
+    );
+  }
+  .motria-auth-aside .motria-mark,
+  .motria-auth-aside .motria-wordmark .text-primary {
+    color: #ff4858;
+  }
+  .motria-auth-aside :where(a, button):focus-visible {
+    outline-color: white;
+  }
+  .motria-auth-story {
+    position: relative;
+    margin-top: auto;
+    padding-block: 4rem;
+  }
+  .motria-auth-story h2 {
+    font-size: clamp(3.5rem, 5.4vw, 5.5rem);
+    line-height: 1.02;
+  }
+  .motria-auth-story h2 span {
+    color: #ff4858;
+  }
+  .motria-auth-story > p {
+    max-width: 24rem;
+    margin-top: 1.5rem;
+    font-size: 0.9375rem;
+    line-height: 1.9;
+    color: rgb(255 255 255 / 0.85);
+  }
+  .motria-auth-aside-footer {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-top: 1px solid rgb(255 255 255 / 0.25);
+    padding-top: 1.5rem;
+  }
+  .motria-auth-aside-footer p {
+    font-size: 0.75rem;
+    line-height: 1.9;
+    color: rgb(255 255 255 / 0.85);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motria-auth *,
+  .motria-auth *::before,
+  .motria-auth *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

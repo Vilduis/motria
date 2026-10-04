@@ -34,9 +34,6 @@ function persistSession(data: LoginResponse, email: string) {
 }
 
 const authService = {
-    /**
-     * Inicia sesión contra POST /api/auth/login.
-     */
     async login(credentials: LoginRequest): Promise<LoginResponse> {
         const response = await api.post<LoginResponse>('/auth/login', credentials);
         const data = response.data;
@@ -76,9 +73,6 @@ const authService = {
         await api.post('/auth/forgot-password', payload);
     },
 
-    /**
-     * Aplica un nuevo password usando el token recibido por email.
-     */
     async resetPassword(payload: ResetPasswordRequest): Promise<void> {
         await api.post('/auth/reset-password', payload);
     },

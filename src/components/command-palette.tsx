@@ -164,7 +164,6 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         showCloseButton={false}
         className="gap-0 p-0 sm:max-w-[560px]"
       >
-        {/* Search input */}
         <div className="flex items-center gap-2.5 border-b border-border/80 px-4">
           <Search className="size-4 shrink-0 text-muted-foreground/70" />
           <input
@@ -180,7 +179,6 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           </kbd>
         </div>
 
-        {/* Results */}
         <div className="max-h-80 overflow-y-auto p-2">
           {visible.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-1 px-3 py-10 text-center">
@@ -238,7 +236,6 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           )}
         </div>
 
-        {/* Footer hints */}
         <div className="flex items-center justify-between border-t border-border/80 bg-secondary/35 px-4 py-2 text-[10.5px] text-muted-foreground dark:bg-white/[0.015]">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
@@ -254,7 +251,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               Abrir
             </span>
           </div>
-          <span className="font-medium">Workshop</span>
+          <span className="font-medium">Motria</span>
         </div>
       </DialogContent>
     </Dialog>

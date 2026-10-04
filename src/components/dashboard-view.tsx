@@ -20,6 +20,9 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { CommandPalette } from "@/components/command-palette"
 import { Loader2, Search } from "lucide-react"
 
+const IS_MAC =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent)
+
 function RouteFallback() {
   return (
     <div className="flex flex-1 items-center justify-center py-24">
@@ -36,6 +39,7 @@ const PAGE_LABELS: Record<string, string> = {
   "/dashboard/technicians": "Técnicos",
   "/dashboard/users": "Usuarios",
   "/dashboard/account": "Mi Cuenta",
+  "/dashboard/plan": "Planes",
 }
 
 function DashboardHeader({
@@ -49,8 +53,8 @@ function DashboardHeader({
 
   return (
     <header className="sticky top-0 z-30 flex h-13 shrink-0 items-center gap-2 border-b border-border/70 bg-background/85 px-3 backdrop-blur-md md:px-4">
-      <SidebarTrigger className="-ml-1 size-7 rounded-md text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground" />
-      <Separator orientation="vertical" className="mx-1 h-4 bg-border/60" />
+      <SidebarTrigger className="-ml-1 size-8 rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" />
+      <Separator orientation="vertical" className="mx-1 bg-border data-vertical:h-4 data-vertical:self-center" />
 
       <Breadcrumb className="min-w-0 flex-1">
         <BreadcrumbList className="text-[12.5px]">
@@ -68,7 +72,7 @@ function DashboardHeader({
             </>
           )}
           <BreadcrumbItem>
-            <BreadcrumbPage className="font-medium text-foreground">
+            <BreadcrumbPage className="font-semibold text-foreground">
               {label}
             </BreadcrumbPage>
           </BreadcrumbItem>
@@ -78,13 +82,13 @@ function DashboardHeader({
       <button
         type="button"
         onClick={onOpenPalette}
-        className="flex h-7 items-center gap-2 rounded-md border border-border/70 bg-secondary/40 px-2 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-secondary/70 hover:text-foreground dark:bg-white/[0.025] dark:hover:bg-white/[0.05]"
+        className="flex h-8 items-center gap-2 rounded-full border border-border bg-card px-3 text-xs text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground"
         aria-label="Buscar"
       >
         <Search className="size-3.5" />
         <span className="hidden sm:inline">Buscar</span>
-        <kbd className="ml-1 hidden h-4 items-center rounded border border-border/70 bg-background px-1 text-[9.5px] font-medium text-foreground/70 sm:inline-flex">
-          ⌘K
+        <kbd className="ml-1 hidden h-[18px] items-center rounded-full border border-border bg-muted px-1.5 text-[10px] font-semibold text-muted-foreground sm:inline-flex">
+          {IS_MAC ? "⌘K" : "Ctrl K"}
         </kbd>
       </button>
       <ModeToggle />

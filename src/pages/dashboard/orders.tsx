@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
@@ -40,14 +41,12 @@ import {
 } from "lucide-react"
 import orderService from "@/services/orderService"
 import vehicleService from "@/services/vehicleService"
-import customerService from "@/services/customerService"
 import technicalService from "@/services/technicalService"
 import authService from "@/services/authService"
 import type {
   ServiceOrder,
   DTOServiceOrder,
   Vehicle,
-  Customer,
   Technical,
   OrderStatus,
 } from "@/types"
@@ -63,6 +62,9 @@ import { DataToolbar } from "@/components/data/data-toolbar"
 import { RowActions } from "@/components/data/row-actions"
 import { ConfirmDialog } from "@/components/data/confirm-dialog"
 import { useTableFilter } from "@/hooks/use-table-filter"
+import { usePagination } from "@/hooks/use-pagination"
+import { EntityCombobox } from "@/components/data/entity-combobox"
+import { DataPagination } from "@/components/data/data-pagination"
 
 const STATUS_BADGE: Record<
   OrderStatus,
@@ -73,7 +75,10 @@ const STATUS_BADGE: Record<
   TERMINADO: { variant: "done", label: "Terminado" },
 }
 
-const STATUS_FILTER_OPTIONS: Array<{ value: "ALL" | OrderStatus; label: string }> = [
+const STATUS_FILTER_OPTIONS: Array<{
+  value: "ALL" | OrderStatus
+  label: string
+}> = [
   { value: "ALL", label: "Todos los estados" },
   { value: "PENDIENTE", label: "Pendiente" },
   { value: "EN_PROCESO", label: "En proceso" },
@@ -83,7 +88,6 @@ const STATUS_FILTER_OPTIONS: Array<{ value: "ALL" | OrderStatus; label: string }
 export default function ServiceOrdersPage() {
   const [orders, setOrders] = useState<ServiceOrder[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
-  const [customers, setCustomers] = useState<Customer[]>([])
   const [technicians, setTechnicians] = useState<Technical[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -107,13 +111,11 @@ export default function ServiceOrdersPage() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const [vData, cData, tData] = await Promise.all([
+      const [vData, tData] = await Promise.all([
         vehicleService.getAllVehicles(),
-        customerService.getAllCustomers(),
         technicalService.getAllTechnicals(),
       ])
       setVehicles(vData)
-      setCustomers(cData)
       setTechnicians(tData)
 
       let oData: ServiceOrder[] = []
@@ -121,7 +123,7 @@ export default function ServiceOrdersPage() {
         const myProfile = tData.find(
           (t) =>
             t.user?.email === currentUser.email ||
-            (t.user?.id && String(t.user?.id) === String(currentUser.id)),
+            (t.user?.id && String(t.user?.id) === String(currentUser.id))
         )
         if (myProfile) {
           oData = await orderService.getOrdersByTechnical(myProfile.id)
@@ -151,25 +153,40 @@ export default function ServiceOrdersPage() {
       } ${o.customer?.name ?? ""} ${o.customer?.lastName ?? ""} ${
         o.technical?.name ?? ""
       } ${o.technical?.lastName ?? ""}`,
-    [],
+    []
   )
-  const { query, setQuery, filtered: searchFiltered } = useTableFilter(
-    orders,
-    getSearchable,
-  )
+  const {
+    query,
+    setQuery,
+    filtered: searchFiltered,
+  } = useTableFilter(orders, getSearchable)
   const filtered =
     statusFilter === "ALL"
       ? searchFiltered
       : searchFiltered.filter((o) => o.status === statusFilter)
+  const pagination = usePagination(filtered, {
+    resetKey: `${query}|${statusFilter}`,
+  })
+
+  const selectedVehicle = vehicles.find((v) => v.id === formData.vehicleId)
+  const orderCustomer = selectedVehicle?.customer ?? editingOrder?.customer
+  const orderCustomerName = orderCustomer
+    ? `${orderCustomer.name} ${orderCustomer.lastName}`
+    : ""
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!(isTecnico && !isAdmin) && formData.vehicleId === 0) {
+      toast.warning("Selecciona el vehículo de la orden")
+      document.getElementById("order-vehicle")?.focus()
+      return
+    }
     try {
       if (editingOrder) {
         if (isTecnico && !isAdmin) {
           await orderService.updateOrderStatus(
             editingOrder.id,
-            formData.status || "PENDIENTE",
+            formData.status || "PENDIENTE"
           )
           toast.success("Estado de orden actualizado")
         } else {
@@ -251,80 +268,58 @@ export default function ServiceOrdersPage() {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Cliente</Label>
-            <Select
-              value={
-                formData.customerId === 0
-                  ? undefined
-                  : formData.customerId.toString()
-              }
-              onValueChange={(val) =>
-                setFormData({ ...formData, customerId: parseInt(val) })
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecciona un cliente" />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((c) => (
-                  <SelectItem key={c.id} value={c.id.toString()}>
-                    {c.name} {c.lastName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="order-vehicle">Vehículo</Label>
+            <EntityCombobox
+              id="order-vehicle"
+              value={formData.vehicleId}
+              onChange={(id) => {
+                // The vehicle's owner becomes the order's customer.
+                const vehicle = vehicles.find((v) => v.id === id)
+                setFormData({
+                  ...formData,
+                  vehicleId: id,
+                  customerId: vehicle?.customer?.id ?? 0,
+                })
+              }}
+              options={vehicles.map((v) => ({
+                value: v.id,
+                label: `${v.plate} · ${v.brand} ${v.model}`,
+                description: v.customer
+                  ? `${v.customer.name} ${v.customer.lastName} · ${v.customer.phone}`
+                  : "Sin dueño registrado",
+              }))}
+              placeholder="Selecciona un vehículo"
+              searchPlaceholder="Buscar por placa, marca, modelo o dueño"
+              emptyText="Ningún vehículo coincide. Regístralo en Vehículos."
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Vehículo</Label>
-              <Select
-                value={
-                  formData.vehicleId === 0
-                    ? undefined
-                    : formData.vehicleId.toString()
-                }
-                onValueChange={(val) =>
-                  setFormData({ ...formData, vehicleId: parseInt(val) })
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecciona..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {vehicles.map((v) => (
-                    <SelectItem key={v.id} value={v.id.toString()}>
-                      {v.plate} — {v.brand}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="order-customer">Cliente</Label>
+              <Input
+                id="order-customer"
+                readOnly
+                tabIndex={-1}
+                value={orderCustomerName}
+                placeholder="Se completa con el vehículo"
+                className="truncate bg-muted text-foreground hover:border-input focus-visible:ring-0 dark:bg-white/[0.04]"
+              />
             </div>
             <div className="space-y-1.5">
-              <Label>Técnico asignado</Label>
-              <Select
-                value={
-                  formData.technicalId === 0
-                    ? undefined
-                    : formData.technicalId.toString()
-                }
-                onValueChange={(val) =>
-                  setFormData({
-                    ...formData,
-                    technicalId: parseInt(val),
-                  })
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecciona..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {technicians.map((t) => (
-                    <SelectItem key={t.id} value={t.id.toString()}>
-                      {t.name} {t.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="order-technical">Técnico asignado</Label>
+              <EntityCombobox
+                id="order-technical"
+                value={formData.technicalId}
+                onChange={(id) => setFormData({ ...formData, technicalId: id })}
+                options={technicians.map((t) => ({
+                  value: t.id,
+                  label: `${t.name} ${t.lastName}`,
+                  description: t.specialty,
+                }))}
+                placeholder="Selecciona..."
+                searchPlaceholder="Buscar por nombre o especialidad"
+                emptyText="Ningún técnico coincide."
+              />
             </div>
           </div>
           <div className="space-y-1.5">
@@ -431,21 +426,18 @@ export default function ServiceOrdersPage() {
       <DataToolbar
         search={query}
         onSearchChange={setQuery}
-        searchPlaceholder="Buscar por placa, cliente, técnico o diagnóstico..."
+        searchPlaceholder="Buscar placa, cliente o técnico"
         count={loading ? undefined : filtered.length}
         filters={
           <Select
             value={statusFilter}
             onValueChange={(v) =>
               setStatusFilter(
-                v as (typeof STATUS_FILTER_OPTIONS)[number]["value"],
+                v as (typeof STATUS_FILTER_OPTIONS)[number]["value"]
               )
             }
           >
-            <SelectTrigger
-              size="sm"
-              className="h-8 min-w-[160px] text-[13px]"
-            >
+            <SelectTrigger size="sm" className="h-8 min-w-[160px] text-[13px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -461,14 +453,16 @@ export default function ServiceOrdersPage() {
 
       {techStatusDialog}
 
-      <div className="overflow-hidden rounded-xl border border-border/80 bg-card">
+      <div className="scroll-mt-16 overflow-hidden rounded-xl border border-border/80 bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[70px]">ID</TableHead>
-              <TableHead>Fecha</TableHead>
+              <TableHead className="hidden w-[70px] md:table-cell">
+                ID
+              </TableHead>
+              <TableHead className="hidden md:table-cell">Fecha</TableHead>
               <TableHead>Vehículo y dueño</TableHead>
-              <TableHead>Técnico</TableHead>
+              <TableHead className="hidden md:table-cell">Técnico</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead className="w-[60px] text-right">
                 <span className="sr-only">Acciones</span>
@@ -492,14 +486,14 @@ export default function ServiceOrdersPage() {
                       query || statusFilter !== "ALL"
                         ? "Ajusta los filtros o el término de búsqueda."
                         : isAdmin
-                        ? "Crea la primera orden de servicio con el botón de arriba."
-                        : "Aún no tienes órdenes asignadas."
+                          ? "Crea la primera orden de servicio con el botón de arriba."
+                          : "Aún no tienes órdenes asignadas."
                     }
                   />
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((order) => {
+              pagination.pageItems.map((order) => {
                 const statusInfo = STATUS_BADGE[order.status]
                 const actions = [
                   {
@@ -525,12 +519,12 @@ export default function ServiceOrdersPage() {
                 ]
                 return (
                   <TableRow key={order.id}>
-                    <TableCell className="text-mono text-muted-foreground">
+                    <TableCell className="text-mono hidden text-muted-foreground md:table-cell">
                       #{order.id}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <div className="flex items-center gap-1.5 text-[13px]">
-                        <Calendar className="size-3 shrink-0 text-muted-foreground/70" />
+                        <Calendar className="size-3 shrink-0 text-muted-foreground" />
                         {order.date
                           ? format(new Date(order.date), "dd MMM yyyy", {
                               locale: es,
@@ -540,12 +534,19 @@ export default function ServiceOrdersPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-0.5">
+                        <div className="text-caption md:hidden">
+                          <span className="text-mono text-foreground">
+                            #{order.id}
+                          </span>
+                          {order.date &&
+                            ` · ${format(new Date(order.date), "dd MMM", { locale: es })}`}
+                        </div>
                         <div className="flex items-center gap-1.5 text-[13.5px] font-medium">
-                          <Car className="size-3 shrink-0 text-brand" />
+                          <Car className="size-3 shrink-0 text-muted-foreground" />
                           <span className="text-mono tracking-wider">
                             {order.vehicle?.plate}
                           </span>
-                          <span className="text-muted-foreground font-normal">
+                          <span className="font-normal text-muted-foreground">
                             ({order.vehicle?.brand})
                           </span>
                         </div>
@@ -553,9 +554,15 @@ export default function ServiceOrdersPage() {
                           <UserIcon className="size-3 shrink-0" />
                           {order.customer?.name} {order.customer?.lastName}
                         </div>
+                        <div className="text-caption flex items-center gap-1.5 md:hidden">
+                          <Wrench className="size-3 shrink-0" />
+                          {order.technical
+                            ? `${order.technical.name} ${order.technical.lastName}`
+                            : "Sin asignar"}
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
                         <Wrench className="size-3 shrink-0" />
                         {order.technical
@@ -577,6 +584,14 @@ export default function ServiceOrdersPage() {
             )}
           </TableBody>
         </Table>
+        <DataPagination
+          page={pagination.page}
+          pageCount={pagination.pageCount}
+          start={pagination.start}
+          end={pagination.end}
+          total={pagination.total}
+          onPageChange={pagination.setPage}
+        />
       </div>
 
       <ConfirmDialog

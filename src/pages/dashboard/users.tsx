@@ -41,6 +41,8 @@ import { DataToolbar } from "@/components/data/data-toolbar"
 import { RowActions } from "@/components/data/row-actions"
 import { ConfirmDialog } from "@/components/data/confirm-dialog"
 import { useTableFilter } from "@/hooks/use-table-filter"
+import { usePagination } from "@/hooks/use-pagination"
+import { DataPagination } from "@/components/data/data-pagination"
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
@@ -77,6 +79,7 @@ export default function UsersPage() {
     [],
   )
   const { query, setQuery, filtered } = useTableFilter(users, getSearchable)
+  const pagination = usePagination(filtered, { resetKey: query })
 
   const handleOpenEdit = (user: User) => {
     setEditingUser(user)
@@ -227,14 +230,14 @@ export default function UsersPage() {
         </DialogContent>
       </Dialog>
 
-      <div className="overflow-hidden rounded-xl border border-border/80 bg-card">
+      <div className="scroll-mt-16 overflow-hidden rounded-xl border border-border/80 bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[60px]">ID</TableHead>
+              <TableHead className="hidden md:table-cell w-[60px]">ID</TableHead>
               <TableHead>Correo</TableHead>
               <TableHead>Estado</TableHead>
-              <TableHead>Rol</TableHead>
+              <TableHead className="hidden md:table-cell">Rol</TableHead>
               <TableHead className="w-[60px] text-right">
                 <span className="sr-only">Acciones</span>
               </TableHead>
@@ -258,21 +261,26 @@ export default function UsersPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((user) => (
+              pagination.pageItems.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell className="text-mono text-muted-foreground">
+                  <TableCell className="text-mono hidden md:table-cell text-muted-foreground">
                     {user.id}
                   </TableCell>
-                  <TableCell className="font-medium">{user.email}</TableCell>
+                  <TableCell className="max-w-[11rem] font-medium md:max-w-none">
+                    <div className="truncate">{user.email}</div>
+                    <div className="text-caption md:hidden">
+                      {getPrimaryRole(user).toUpperCase()}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={user.active ? "done" : "outline"}>
                       {user.active ? "Activo" : "Inactivo"}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <div className="flex items-center gap-1.5">
                       {hasRole(user, "ADMIN") ? (
-                        <Shield className="size-3.5 text-brand" />
+                        <Shield className="size-3.5 text-foreground" />
                       ) : (
                         <UserIcon className="size-3.5 text-muted-foreground" />
                       )}
@@ -304,6 +312,14 @@ export default function UsersPage() {
             )}
           </TableBody>
         </Table>
+        <DataPagination
+          page={pagination.page}
+          pageCount={pagination.pageCount}
+          start={pagination.start}
+          end={pagination.end}
+          total={pagination.total}
+          onPageChange={pagination.setPage}
+        />
       </div>
 
       <ConfirmDialog

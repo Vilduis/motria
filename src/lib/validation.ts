@@ -1,7 +1,5 @@
 /** Reglas de validación compartidas en formularios. */
 
-export const PHONE_LENGTH = 9
-
 /** Quita espacios en blanco; el resto debe ser exactamente 9 dígitos. */
 export function normalizePhone(value: string): string {
   return value.replace(/\s+/g, "")

@@ -6,6 +6,8 @@ import { defineConfig } from "vite"
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // Only variables starting with MOTRIA_ reach the browser bundle.
+  envPrefix: "MOTRIA_",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

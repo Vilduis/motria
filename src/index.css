@@ -1,8 +1,10 @@
-@import url("https://api.fontshare.com/v2/css?f[]=satoshi@700,500,400&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/manrope";
+@import "@fontsource/barlow-condensed/latin-500.css";
+@import "@fontsource/barlow-condensed/latin-600.css";
+@import "@fontsource/barlow-condensed/latin-700.css";
 @import "./styles/design-tokens.css";
 @import "./styles/typography.css";
 
@@ -10,9 +12,10 @@
 
 @theme inline {
   /* Typography */
-  --font-sans:    "Geist Variable", sans-serif;
-  --font-heading: "Satoshi", "Geist Variable", sans-serif;
-  --font-mono:    ui-monospace, "SF Mono", monospace;
+  --font-sans:    "Manrope Variable", sans-serif;
+  --font-heading: "Barlow Condensed", "Manrope Variable", sans-serif;
+  /* Plates and IDs: Manrope tabular, not a system mono that varies by OS */
+  --font-mono:    "Manrope Variable", sans-serif;
 
   /* Custom easing */
   --ease-expo:   cubic-bezier(0.16, 1, 0.3, 1);
@@ -23,6 +26,7 @@
   --color-brand-dim:        var(--brand-dim);
   --color-brand-subtle:     var(--brand-subtle);
   --color-brand-foreground: var(--brand-foreground);
+  --color-primary-deep:     var(--primary-deep);
 
   /* Status semantic utilities */
   --color-status-pending:     var(--status-pending);
@@ -82,142 +86,141 @@
   --shadow-modal:    var(--shadow-modal-value);
 }
 
-/* ── Light Mode — Linear / Vercel inspired, refined & airy ─────────────── */
+/* ── Light Mode — Motria: blanco de trabajo, rojo de taller, carbón ─────── */
 :root {
   --radius: 0.625rem;
 
-  /* Brand — slightly deeper indigo for better contrast on white */
-  --brand:            oklch(0.52 0.22 264);
-  --brand-dim:        oklch(0.44 0.18 264);
-  --brand-subtle:     oklch(0.52 0.22 264 / 0.08);
-  --brand-foreground: oklch(0.99 0 0);
+  /* Brand — workshop red (shared with landing / auth) */
+  --brand:            #cf233a;
+  --brand-dim:        #b51d31;
+  --brand-subtle:     #fbecef;
+  --brand-foreground: #ffffff;
+  --primary-deep:     #b51d31;
 
-  /* Status semantic — saturated enough to read on white */
-  --status-pending:     oklch(0.58 0.16 72);
-  --status-pending-bg:  oklch(0.58 0.16 72 / 0.10);
-  --status-progress:    oklch(0.52 0.22 264);
-  --status-progress-bg: oklch(0.52 0.22 264 / 0.08);
-  --status-done:        oklch(0.50 0.16 162);
-  --status-done-bg:     oklch(0.50 0.16 162 / 0.10);
+  /* Status semantic — same pairs as the landing demo */
+  --status-pending:     #89590d;
+  --status-pending-bg:  #fff3d6;
+  --status-progress:    #255dae;
+  --status-progress-bg: #eaf1fc;
+  --status-done:        #216b48;
+  --status-done-bg:     #e6f5ec;
 
-  /* Core surface — warm off-white bg, pure white cards (Linear-style) */
-  --background:         oklch(0.985 0.002 264);   /* very subtle cool tint */
-  --foreground:         oklch(0.18 0.008 264);    /* near-black w/ hint of blue */
-  --card:               oklch(1 0 0);              /* pure white pops on bg */
-  --card-foreground:    oklch(0.18 0.008 264);
-  --popover:            oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.008 264);
+  /* Core surface — quiet gray workspace, white working surfaces */
+  --background:         #f5f5f6;
+  --foreground:         #202125;
+  --card:               #ffffff;
+  --card-foreground:    #202125;
+  --popover:            #ffffff;
+  --popover-foreground: #202125;
 
   /* Interactive */
-  --primary:              oklch(0.52 0.22 264);
-  --primary-foreground:   oklch(0.99 0 0);
-  --secondary:            oklch(0.965 0.003 264);
-  --secondary-foreground: oklch(0.25 0.008 264);
-  --muted:                oklch(0.965 0.003 264);
-  --muted-foreground:     oklch(0.48 0.012 264);
-  --accent:               oklch(0.52 0.22 264 / 0.08);
-  --accent-foreground:    oklch(0.42 0.20 264);
-  --destructive:          oklch(0.55 0.22 27);
+  --primary:              #cf233a;
+  --primary-foreground:   #ffffff;
+  --secondary:            #efeff0;
+  --secondary-foreground: #202125;
+  --muted:                #efeff0;
+  --muted-foreground:     #5f6066;
+  --accent:               #fbecef;
+  --accent-foreground:    #b51d31;
+  --destructive:          #b51d31;
 
-  /* Borders & inputs — soft, with a hint of cool tone */
-  --border: oklch(0.915 0.005 264);
-  --input:  oklch(0.915 0.005 264);
-  --ring:   oklch(0.52 0.22 264 / 0.25);
+  /* Borders & inputs — hairlines divide, field strokes contrast */
+  --border: #e3e3e5;
+  --input:  #8a8c92;
+  --ring:   #cf233a;
 
   /* Charts */
-  --chart-1: oklch(0.52 0.22 264);
-  --chart-2: oklch(0.50 0.16 162);
-  --chart-3: oklch(0.58 0.16 72);
-  --chart-4: oklch(0.55 0.22 15);
-  --chart-5: oklch(0.45 0.008 264);
+  --chart-1: #cf233a;
+  --chart-2: #216b48;
+  --chart-3: #89590d;
+  --chart-4: #255dae;
+  --chart-5: #65666c;
 
-  /* Sidebar — slightly cooler off-white than background */
-  --sidebar:                    oklch(0.972 0.004 264);
-  --sidebar-foreground:         oklch(0.45 0.012 264);
-  --sidebar-primary:            oklch(0.52 0.22 264);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent:             oklch(0.52 0.22 264 / 0.07);
-  --sidebar-accent-foreground:  oklch(0.20 0.008 264);
-  --sidebar-border:             oklch(0.91 0.005 264);
-  --sidebar-ring:               oklch(0.52 0.22 264 / 0.25);
+  /* Sidebar — charcoal frame, as the landing's hero and footer */
+  --sidebar:                    #191b20;
+  --sidebar-foreground:         #b9bbc1;
+  --sidebar-primary:            #f34758;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent:             #262930;
+  --sidebar-accent-foreground:  #ffffff;
+  --sidebar-border:             #2b2e35;
+  --sidebar-ring:               #f34758;
 
-  /* Light-mode shadow values — feather-light, no dark blobs */
-  --shadow-xs-value:       0 1px 2px oklch(0.18 0.008 264 / 0.05);
-  --shadow-sm-value:       0 1px 3px oklch(0.18 0.008 264 / 0.06),
-                           0 1px 2px oklch(0.18 0.008 264 / 0.04);
-  --shadow-card-value:     0 1px 2px oklch(0.18 0.008 264 / 0.04),
-                           0 1px 0 oklch(0.18 0.008 264 / 0.03);
-  --shadow-elevated-value: 0 6px 16px oklch(0.18 0.008 264 / 0.08),
-                           0 2px 4px oklch(0.18 0.008 264 / 0.04);
-  --shadow-modal-value:    0 20px 48px oklch(0.18 0.008 264 / 0.18),
-                           0 4px 12px oklch(0.18 0.008 264 / 0.06);
+  /* Light-mode shadow values — offset, soft, charcoal-tinted */
+  --shadow-xs-value:       0 1px 2px rgb(25 27 32 / 0.04);
+  --shadow-sm-value:       0 2px 5px rgb(25 27 32 / 0.06);
+  --shadow-card-value:     0 1px 2px rgb(25 27 32 / 0.04);
+  --shadow-elevated-value: 0 12px 32px rgb(25 27 32 / 0.12);
+  --shadow-modal-value:    0 24px 56px rgb(25 27 32 / 0.2),
+                           0 4px 12px rgb(25 27 32 / 0.06);
 }
 
-/* ── Dark Mode — Premium, primary experience ─────────────────────────── */
+/* ── Dark Mode — Motria: carbón de taller con rojo encendido ────────────── */
 .dark {
-  /* Brand — refined: less neon, more Linear / Vercel */
-  --brand:            oklch(0.62 0.17 262);
-  --brand-dim:        oklch(0.52 0.15 262);
-  --brand-subtle:     oklch(0.62 0.17 262 / 0.12);
-  --brand-foreground: oklch(0.99 0 0);
+  /* Brand — brighter red for text and marks on charcoal */
+  --brand:            #f34758;
+  --brand-dim:        #cf233a;
+  --brand-subtle:     rgb(243 71 88 / 0.14);
+  --brand-foreground: #ffffff;
+  --primary-deep:     #b51d31;
 
-  /* Status semantic (brighter for dark backgrounds) */
-  --status-pending:     oklch(0.80 0.14 82);
-  --status-pending-bg:  oklch(0.80 0.14 82 / 0.14);
-  --status-progress:    oklch(0.62 0.17 262);
-  --status-progress-bg: oklch(0.62 0.17 262 / 0.14);
-  --status-done:        oklch(0.68 0.17 160);
-  --status-done-bg:     oklch(0.68 0.17 160 / 0.14);
+  /* Status semantic (brighter for charcoal grounds) */
+  --status-pending:     #f0b952;
+  --status-pending-bg:  rgb(240 185 82 / 0.13);
+  --status-progress:    #7fa9ee;
+  --status-progress-bg: rgb(127 169 238 / 0.13);
+  --status-done:        #5fc591;
+  --status-done-bg:     rgb(95 197 145 / 0.13);
 
-  /* Core surface — layered dark with a hint of warm neutral */
-  --background:         oklch(0.09 0.002 280);
-  --foreground:         oklch(0.96 0 0);
-  --card:               oklch(0.128 0.004 280);
-  --card-foreground:    oklch(0.96 0 0);
-  --popover:            oklch(0.128 0.004 280);
-  --popover-foreground: oklch(0.96 0 0);
+  /* Core surface — layered charcoal */
+  --background:         #131418;
+  --foreground:         #f1f1f2;
+  --card:               #1b1d22;
+  --card-foreground:    #f1f1f2;
+  --popover:            #1f2127;
+  --popover-foreground: #f1f1f2;
 
-  /* Interactive */
-  --primary:            oklch(0.62 0.17 262);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary:            oklch(0.165 0.003 280);
-  --secondary-foreground: oklch(0.88 0 0);
-  --muted:              oklch(0.165 0.003 280);
-  --muted-foreground:   oklch(0.58 0.005 280);
-  --accent:             oklch(0.62 0.17 262 / 0.12);
-  --accent-foreground:  oklch(0.86 0.06 262);
-  --destructive:        oklch(0.68 0.22 22);
+  /* Interactive — the action red stays the brand red; white text holds 5:1 */
+  --primary:            #cf233a;
+  --primary-foreground: #ffffff;
+  --secondary:            #25272d;
+  --secondary-foreground: #e6e6e8;
+  --muted:              #23252b;
+  --muted-foreground:   #a2a4aa;
+  --accent:             rgb(243 71 88 / 0.14);
+  --accent-foreground:  #ff9aa4;
+  --destructive:        #f34758;
 
-  /* Borders & inputs — tighter, more refined */
-  --border: oklch(1 0 0 / 0.075);
-  --input:  oklch(1 0 0 / 0.09);
-  --ring:   oklch(0.62 0.17 262 / 0.40);
+  /* Borders & inputs */
+  --border: rgb(255 255 255 / 0.08);
+  --input:  rgb(255 255 255 / 0.22);
+  --ring:   #f34758;
 
   /* Charts */
-  --chart-1: oklch(0.62 0.17 262);
-  --chart-2: oklch(0.68 0.17 160);
-  --chart-3: oklch(0.80 0.14 82);
-  --chart-4: oklch(0.65 0.22 15);
-  --chart-5: oklch(0.40 0 0);
+  --chart-1: #f34758;
+  --chart-2: #5fc591;
+  --chart-3: #f0b952;
+  --chart-4: #7fa9ee;
+  --chart-5: #8a8c92;
 
-  /* Sidebar — slightly darker than background, warm hint */
-  --sidebar:                    oklch(0.07 0.002 280);
-  --sidebar-foreground:         oklch(0.58 0.005 280);
-  --sidebar-primary:            oklch(0.62 0.17 262);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent:             oklch(1 0 0 / 0.05);
-  --sidebar-accent-foreground:  oklch(0.92 0 0);
-  --sidebar-border:             oklch(1 0 0 / 0.06);
-  --sidebar-ring:               oklch(0.62 0.17 262 / 0.40);
+  /* Sidebar — the same charcoal frame as light mode */
+  --sidebar:                    #191b20;
+  --sidebar-foreground:         #b9bbc1;
+  --sidebar-primary:            #f34758;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent:             #262930;
+  --sidebar-accent-foreground:  #ffffff;
+  --sidebar-border:             #2b2e35;
+  --sidebar-ring:               #f34758;
 
-  /* Dark-mode shadow values — strong, deep, with inset highlight */
-  --shadow-xs-value:       0 1px 2px oklch(0 0 0 / 0.25);
-  --shadow-sm-value:       0 2px 8px oklch(0 0 0 / 0.30);
-  --shadow-card-value:     0 4px 16px oklch(0 0 0 / 0.35),
-                           inset 0 1px 0 oklch(1 0 0 / 0.06);
-  --shadow-elevated-value: 0 8px 32px oklch(0 0 0 / 0.40),
-                           inset 0 1px 0 oklch(1 0 0 / 0.08);
-  --shadow-modal-value:    0 24px 80px oklch(0 0 0 / 0.50);
+  /* Dark-mode shadow values */
+  --shadow-xs-value:       0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-sm-value:       0 2px 8px rgb(0 0 0 / 0.32);
+  --shadow-card-value:     0 2px 8px rgb(0 0 0 / 0.28),
+                           inset 0 1px 0 rgb(255 255 255 / 0.04);
+  --shadow-elevated-value: 0 12px 32px rgb(0 0 0 / 0.45),
+                           inset 0 1px 0 rgb(255 255 255 / 0.06);
+  --shadow-modal-value:    0 24px 80px rgb(0 0 0 / 0.55);
 }
 
 @keyframes shimmer {
@@ -233,14 +236,16 @@
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+    caret-color: var(--primary);
   }
   html {
     @apply font-sans;
     scroll-behavior: smooth;
   }
   ::selection {
-    background-color: var(--brand-subtle);
+    background-color: var(--accent);
+    color: var(--accent-foreground);
   }
   /* Subtle custom scrollbar — uses currentColor so it adapts per theme */
   ::-webkit-scrollbar {

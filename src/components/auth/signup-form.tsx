@@ -1,20 +1,20 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
+import axios from "axios"
+import { ArrowRight, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { AuthField } from "@/components/auth/auth-field"
 import { PasswordStrength } from "@/components/auth/password-strength"
 import authService from "@/services/authService"
-import { toast } from "sonner"
-import { Loader2, ArrowRight, Check } from "lucide-react"
 import { getErrorMessage } from "@/lib/errorHandler"
 import { isValidPhone, normalizePhone, PHONE_ERROR } from "@/lib/validation"
 
@@ -23,88 +23,85 @@ interface SignupFormProps extends React.ComponentProps<"div"> {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-function SectionHeading({
-  title,
-  hint,
-}: {
-  title: string
-  hint?: string
-}) {
-  return (
-    <div className="flex items-baseline justify-between">
-      <h2 className="text-[12px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
-        {title}
-      </h2>
-      {hint && (
-        <span className="text-[11px] text-muted-foreground/55">{hint}</span>
-      )}
-    </div>
-  )
+const INITIAL_FORM = {
+  workshopName: "",
+  ownerName: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  phone: "",
+  address: "",
 }
+type Field = keyof typeof INITIAL_FORM
 
 export function SignupForm({
   className,
   onSignupSuccess,
   ...props
 }: SignupFormProps) {
-  const [form, setForm] = useState({
-    workshopName: "",
-    ownerName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    phone: "",
-    address: "",
-  })
+  const [form, setForm] = useState(INITIAL_FORM)
   const [isLoading, setIsLoading] = useState(false)
-  const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({})
+  const [serverError, setServerError] = useState("")
+  const [contactOpen, setContactOpen] = useState("")
+  const pending = useRef(false)
+  const formRef = useRef<HTMLFormElement>(null)
+  const errorRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (serverError) errorRef.current?.focus()
+  }, [serverError])
 
-  const update =
-    (field: keyof typeof form) =>
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      setForm((prev) => ({ ...prev, [field]: e.target.value }))
+  const errors: Partial<Record<Field, string>> = {}
+  if (!form.workshopName.trim())
+    errors.workshopName = "Introduce el nombre de tu taller."
+  if (!form.ownerName.trim())
+    errors.ownerName = "Introduce el nombre del propietario."
+  if (!form.email.trim()) errors.email = "Introduce tu correo electrónico."
+  else if (!EMAIL_RE.test(form.email.trim()))
+    errors.email = "Introduce un correo válido."
+  if (form.password.length < 8) errors.password = "Usa al menos 8 caracteres."
+  if (!form.confirmPassword) errors.confirmPassword = "Repite tu contraseña."
+  else if (form.password !== form.confirmPassword)
+    errors.confirmPassword = "Las contraseñas no coinciden."
+  if (form.phone.trim() && !isValidPhone(form.phone)) errors.phone = PHONE_ERROR
 
-  const markTouched = (field: string) => () =>
-    setTouched((prev) => ({ ...prev, [field]: true }))
+  const fieldProps = (field: Field) => ({
+    id: field,
+    value: form[field],
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+      setForm((prev) => ({ ...prev, [field]: event.target.value }))
+      setServerError("")
+    },
+    onBlur: () => setTouched((prev) => ({ ...prev, [field]: true })),
+    error: touched[field] ? errors[field] : undefined,
+    disabled: isLoading,
+  })
 
-  const emailError =
-    touched.email && form.email.length > 0 && !EMAIL_RE.test(form.email)
-      ? "Introduce un correo válido"
-      : null
-
-  const passwordError =
-    touched.password && form.password.length > 0 && form.password.length < 8
-      ? "Mínimo 8 caracteres"
-      : null
-
-  const confirmError =
-    touched.confirmPassword &&
-    form.confirmPassword.length > 0 &&
-    form.confirmPassword !== form.password
-      ? "Las contraseñas no coinciden"
-      : null
-
-  const phoneError =
-    touched.phone && form.phone.trim().length > 0 && !isValidPhone(form.phone)
-      ? PHONE_ERROR
-      : null
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (pending.current) return
     setTouched({
+      workshopName: true,
+      ownerName: true,
       email: true,
       password: true,
       confirmPassword: true,
+      phone: true,
     })
-    if (!EMAIL_RE.test(form.email)) return
-    if (form.password.length < 8) return
-    if (form.password !== form.confirmPassword) return
-    if (form.phone.trim() && !isValidPhone(form.phone)) {
-      setTouched((prev) => ({ ...prev, phone: true }))
+    setServerError("")
+    const firstInvalid = (Object.keys(INITIAL_FORM) as Field[]).find(
+      (field) => errors[field]
+    )
+    if (firstInvalid) {
+      if (errors.phone) setContactOpen("contact")
+      requestAnimationFrame(() => {
+        ;(
+          formRef.current?.elements.namedItem(firstInvalid) as HTMLInputElement
+        )?.focus()
+      })
       return
     }
-
+    pending.current = true
     setIsLoading(true)
     try {
       const data = await authService.registerWorkshop({
@@ -118,252 +115,178 @@ export function SignupForm({
       toast.success(`Bienvenido a ${data.workshopName}`)
       onSignupSuccess?.(Boolean(data.mustChangePassword))
     } catch (error: unknown) {
-      toast.error(
-        getErrorMessage(
-          error,
-          "No se pudo registrar el taller. Intenta nuevamente.",
-        ),
+      setServerError(
+        axios.isAxiosError(error) && !error.response
+          ? "No pudimos conectar. Comprueba tu conexión e inténtalo de nuevo."
+          : getErrorMessage(
+              error,
+              "No se pudo registrar el taller. Inténtalo de nuevo."
+            )
       )
     } finally {
+      pending.current = false
       setIsLoading(false)
     }
   }
 
   return (
     <Card
-      className={cn("w-full gap-0 py-0 shadow-elevated", className)}
+      className={cn("motria-auth-card motria-auth-card-signup", className)}
       {...props}
     >
-      <CardHeader className="px-7 pb-1 pt-7">
-        <CardTitle className="text-h1">Crea tu cuenta</CardTitle>
-        <CardDescription>
-          Configura tu taller en menos de 5 minutos.
-        </CardDescription>
+      <CardHeader className="gap-0 px-0">
+        <h1 className="motria-heading motria-auth-title">
+          Dale un lugar a tu taller.
+        </h1>
+        <p className="motria-auth-intro">
+          Crea tu cuenta para organizar tu taller con Motria.
+        </p>
       </CardHeader>
-
-      <CardContent className="px-7 pb-7 pt-6">
-        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-          {/* Sección: Tu taller */}
-          <div className="space-y-3">
-            <SectionHeading title="Tu taller" />
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="workshopName">Nombre del taller</Label>
-                <Input
-                  id="workshopName"
-                  type="text"
-                  placeholder="Taller Sandoval"
-                  value={form.workshopName}
-                  onChange={update("workshopName")}
-                  required
-                  disabled={isLoading}
-                  autoFocus
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="ownerName">Propietario</Label>
-                <Input
-                  id="ownerName"
-                  type="text"
-                  placeholder="Juan Pérez"
-                  value={form.ownerName}
-                  onChange={update("ownerName")}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
+      <CardContent className="px-0">
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          className="motria-auth-form space-y-6"
+          noValidate
+          aria-busy={isLoading}
+        >
+          {serverError && (
+            <div
+              ref={errorRef}
+              role="alert"
+              tabIndex={-1}
+              className="motria-auth-server-error"
+            >
+              {serverError}
             </div>
-          </div>
-
-          {/* Sección: Tu cuenta */}
-          <div className="space-y-3">
-            <SectionHeading title="Tu cuenta" />
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Correo electrónico</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="dueno@taller.com"
-                value={form.email}
-                onChange={update("email")}
-                onBlur={markTouched("email")}
-                aria-invalid={emailError ? true : undefined}
-                aria-describedby={emailError ? "email-error" : undefined}
+          )}
+          <fieldset className="min-w-0" disabled={isLoading}>
+            <legend className="motria-auth-legend">Tu taller</legend>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <AuthField
+                {...fieldProps("workshopName")}
+                label="Nombre del taller"
+                placeholder="Nombre de tu taller"
+                autoComplete="organization"
                 required
-                disabled={isLoading}
-                autoComplete="email"
               />
-              {emailError && (
-                <p
-                  id="email-error"
-                  className="text-[12px] text-destructive"
-                  role="alert"
-                >
-                  {emailError}
-                </p>
-              )}
+              <AuthField
+                {...fieldProps("ownerName")}
+                label="Propietario"
+                placeholder="Tu nombre completo"
+                autoComplete="name"
+                required
+              />
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="password">Contraseña</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Mín. 8 caracteres"
-                  value={form.password}
-                  onChange={update("password")}
-                  onBlur={markTouched("password")}
-                  aria-invalid={passwordError ? true : undefined}
-                  aria-describedby={
-                    passwordError ? "password-error" : "password-strength"
-                  }
-                  required
-                  disabled={isLoading}
-                  autoComplete="new-password"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword">Confirmar</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="Repetir contraseña"
-                  value={form.confirmPassword}
-                  onChange={update("confirmPassword")}
-                  onBlur={markTouched("confirmPassword")}
-                  aria-invalid={confirmError ? true : undefined}
-                  aria-describedby={
-                    confirmError ? "confirm-error" : undefined
-                  }
-                  required
-                  disabled={isLoading}
-                  autoComplete="new-password"
-                />
-              </div>
-            </div>
-
-            <PasswordStrength
-              password={form.password}
-              id="password-strength"
+          </fieldset>
+          <fieldset className="min-w-0 space-y-4" disabled={isLoading}>
+            <legend className="motria-auth-legend">Tu cuenta</legend>
+            <AuthField
+              {...fieldProps("email")}
+              label="Correo electrónico"
+              type="email"
+              placeholder="tu@taller.com"
+              autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
+              required
             />
-            {passwordError && (
-              <p
-                id="password-error"
-                className="text-[12px] text-destructive"
-                role="alert"
-              >
-                {passwordError}
-              </p>
-            )}
-            {confirmError && (
-              <p
-                id="confirm-error"
-                className="text-[12px] text-destructive"
-                role="alert"
-              >
-                {confirmError}
-              </p>
-            )}
-            {!passwordError &&
-              !confirmError &&
-              form.confirmPassword.length > 0 &&
-              form.confirmPassword === form.password && (
-                <p className="flex items-center gap-1 text-[12px] text-status-done">
-                  <Check className="size-3.5" />
-                  Las contraseñas coinciden
-                </p>
-              )}
-          </div>
-
-          {/* Sección: Contacto (opcional) */}
-          <div className="space-y-3">
-            <SectionHeading title="Contacto" hint="Opcional" />
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="phone">Teléfono</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  inputMode="numeric"
-                  maxLength={11}
-                  placeholder="999 999 999"
-                  value={form.phone}
-                  onChange={update("phone")}
-                  onBlur={markTouched("phone")}
-                  aria-invalid={phoneError ? true : undefined}
-                  aria-describedby={phoneError ? "phone-error" : undefined}
-                  disabled={isLoading}
-                />
-                {phoneError && (
-                  <p
-                    id="phone-error"
-                    className="text-[12px] text-destructive"
-                    role="alert"
-                  >
-                    {phoneError}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="address">Dirección</Label>
-                <Input
-                  id="address"
-                  type="text"
-                  placeholder="Av. Principal 123"
-                  value={form.address}
-                  onChange={update("address")}
-                  disabled={isLoading}
-                />
-              </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <AuthField
+                {...fieldProps("password")}
+                label="Contraseña"
+                type="password"
+                placeholder="Mín. 8 caracteres"
+                autoComplete="new-password"
+                minLength={8}
+                aria-describedby="password-hint"
+                required
+              />
+              <AuthField
+                {...fieldProps("confirmPassword")}
+                label="Confirmar contraseña"
+                type="password"
+                placeholder="Repite tu contraseña"
+                autoComplete="new-password"
+                required
+              />
             </div>
-          </div>
-
+            <p
+              id="password-hint"
+              className="text-xs leading-5 text-muted-foreground"
+            >
+              Usa al menos 8 caracteres. Combina letras, números y símbolos para
+              hacerla más segura.
+            </p>
+            <PasswordStrength password={form.password} />
+          </fieldset>
+          <Accordion
+            type="single"
+            collapsible
+            value={contactOpen}
+            onValueChange={setContactOpen}
+          >
+            <AccordionItem value="contact" className="border-y">
+              <AccordionTrigger
+                className="py-4 text-[13px]"
+                disabled={isLoading}
+              >
+                <span>
+                  Datos de contacto{" "}
+                  <span className="ml-2 font-normal text-muted-foreground">
+                    Opcional
+                  </span>
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="space-y-4 pr-0 pb-5">
+                <p className="text-xs leading-5">
+                  Puedes añadirlos ahora o completarlos después desde tu cuenta.
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <AuthField
+                    {...fieldProps("phone")}
+                    label="Teléfono"
+                    type="tel"
+                    inputMode="tel"
+                    maxLength={11}
+                    placeholder="999 999 999"
+                    autoComplete="tel-national"
+                  />
+                  <AuthField
+                    {...fieldProps("address")}
+                    label="Dirección"
+                    placeholder="Calle y número"
+                    autoComplete="street-address"
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+          <p role="status" className="sr-only">
+            {isLoading ? "Creando cuenta…" : ""}
+          </p>
           <Button
             type="submit"
-            className="mt-1 h-10 w-full gap-1.5"
+            className="motria-auth-submit"
             disabled={isLoading}
           >
-            {isLoading ? (
-              <>
+            <span>
+              {isLoading ? "Creando cuenta…" : "Crear cuenta"}
+            </span>
+            <span className="motria-auth-submit-icon" aria-hidden="true">
+              {isLoading ? (
                 <Loader2 className="size-4 animate-spin" />
-                Creando cuenta…
-              </>
-            ) : (
-              <>
-                Crear cuenta
+              ) : (
                 <ArrowRight className="size-4" />
-              </>
-            )}
+              )}
+            </span>
           </Button>
         </form>
-
-        <p className="mt-6 text-[13px] text-muted-foreground">
+        <p className="motria-auth-switch">
           ¿Ya tienes cuenta?{" "}
-          <Link
-            to="/login"
-            className="font-medium text-foreground underline-offset-4 transition-colors hover:text-brand hover:underline"
-          >
+          <Link to="/login" className="motria-auth-link">
             Inicia sesión
           </Link>
-        </p>
-
-        <p className="mt-5 text-[11.5px] text-muted-foreground/55">
-          Al continuar aceptas los{" "}
-          <a
-            href="#"
-            className="underline underline-offset-4 transition-colors hover:text-muted-foreground"
-          >
-            Términos
-          </a>{" "}
-          y la{" "}
-          <a
-            href="#"
-            className="underline underline-offset-4 transition-colors hover:text-muted-foreground"
-          >
-            Política de privacidad
-          </a>
-          .
         </p>
       </CardContent>
     </Card>

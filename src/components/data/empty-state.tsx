@@ -23,10 +23,10 @@ export function EmptyState({
         className
       )}
     >
-      <div className="mb-4 flex size-12 items-center justify-center rounded-xl border border-border bg-secondary/50">
-        <Icon className="size-5 text-muted-foreground" />
+      <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-accent">
+        <Icon className="size-5 text-brand" />
       </div>
-      <p className="font-medium">{title}</p>
+      <p className="text-h3">{title}</p>
       {description && (
         <p className="mt-1 max-w-xs text-sm text-muted-foreground">
           {description}

@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react"
+import { ArrowRight, Check, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { AuthField } from "@/components/auth/auth-field"
 import authService from "@/services/authService"
-import { toast } from "sonner"
-import { Loader2, ShieldCheck, Check } from "lucide-react"
 import { getErrorMessage } from "@/lib/errorHandler"
 
-interface ChangePasswordFormProps extends React.ComponentProps<"div"> {
+interface ChangePasswordFormProps {
+  className?: string
   onChangeSuccess?: () => void
 }
 
@@ -39,7 +40,6 @@ const CRITERIA: Criterion[] = [
 export function ChangePasswordForm({
   className,
   onChangeSuccess,
-  ...props
 }: ChangePasswordFormProps) {
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -57,6 +57,14 @@ export function ChangePasswordForm({
   const allPassed = checks.every((c) => c.passed)
   const passwordsMatch =
     confirmPassword.length > 0 && newPassword === confirmPassword
+  const blockedHint = !currentPassword
+    ? "Escribe tu contraseña actual."
+    : !allPassed
+      ? "La nueva contraseña aún no cumple todos los requisitos."
+      : !passwordsMatch
+        ? "Confirma la nueva contraseña."
+        : ""
+  const blocked = !isLoading && blockedHint !== ""
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -81,25 +89,24 @@ export function ChangePasswordForm({
   }
 
   return (
-    <div className={cn("flex flex-col gap-7", className)} {...props}>
-      {/* Icon + heading */}
-      <div className="flex flex-col items-center gap-4 text-center">
-        <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-secondary/40">
-          <ShieldCheck className="size-5 text-muted-foreground/80" />
-        </div>
-        <div className="space-y-1">
-          <h1 className="text-h2">Actualiza tu contraseña</h1>
-          <p className="text-body-sm max-w-xs text-balance text-muted-foreground">
-            Por seguridad, debes actualizar tu contraseña antes de continuar.
-          </p>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="currentPassword">Contraseña actual</Label>
-          <Input
+    <Card className={cn("motria-auth-card", className)}>
+      <CardHeader className="gap-0 px-0">
+        <h1 className="motria-heading motria-auth-title">
+          Actualiza tu contraseña
+        </h1>
+        <p className="motria-auth-intro">
+          Por seguridad, debes actualizar tu contraseña antes de continuar.
+        </p>
+      </CardHeader>
+      <CardContent className="px-0">
+        <form
+          onSubmit={handleSubmit}
+          className="motria-auth-form space-y-6"
+          aria-busy={isLoading}
+        >
+          <AuthField
             id="currentPassword"
+            label="Contraseña actual"
             type="password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
@@ -107,88 +114,105 @@ export function ChangePasswordForm({
             disabled={isLoading}
             autoComplete="current-password"
           />
-        </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="newPassword">Nueva contraseña</Label>
-          <Input
-            id="newPassword"
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            required
-            disabled={isLoading}
-            autoComplete="new-password"
-          />
+          <div className="space-y-3">
+            <AuthField
+              id="newPassword"
+              label="Nueva contraseña"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              aria-describedby="password-criteria"
+              required
+              disabled={isLoading}
+              autoComplete="new-password"
+            />
 
-          {/* Live criteria checklist */}
-          <ul className="mt-3 grid grid-cols-2 gap-1.5">
-            {checks.map((c) => (
-              <li
-                key={c.label}
-                className={cn(
-                  "flex items-center gap-1.5 text-[11.5px] transition-colors duration-200",
-                  c.passed ? "text-status-done" : "text-muted-foreground/60",
-                )}
-              >
-                <span
+            <ul
+              id="password-criteria"
+              className="grid grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-2"
+            >
+              {checks.map((c) => (
+                <li
+                  key={c.label}
                   className={cn(
-                    "flex size-3.5 shrink-0 items-center justify-center rounded-full border transition-colors duration-200",
-                    c.passed
-                      ? "border-status-done/40 bg-status-done-bg"
-                      : "border-border bg-transparent",
+                    "flex items-center gap-2 text-xs transition-colors duration-200",
+                    c.passed ? "text-status-done" : "text-muted-foreground",
                   )}
                 >
-                  <Check
+                  <span
                     className={cn(
-                      "size-2.5 transition-opacity duration-200",
-                      c.passed ? "opacity-100" : "opacity-0",
+                      "flex size-4 shrink-0 items-center justify-center rounded-full border transition-colors duration-200",
+                      c.passed
+                        ? "border-status-done bg-status-done text-white"
+                        : "border-input bg-transparent",
                     )}
-                    strokeWidth={3}
-                  />
-                </span>
-                {c.label}
-              </li>
-            ))}
-          </ul>
-        </div>
+                    aria-hidden="true"
+                  >
+                    <Check
+                      className={cn(
+                        "size-2.5 transition-opacity duration-200",
+                        c.passed ? "opacity-100" : "opacity-0",
+                      )}
+                      strokeWidth={3.5}
+                    />
+                  </span>
+                  {c.label}
+                  <span className="sr-only">
+                    {c.passed ? "(cumplido)" : "(pendiente)"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="confirmPassword">Confirmar nueva contraseña</Label>
-          <Input
+          <AuthField
             id="confirmPassword"
+            label="Confirmar nueva contraseña"
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            error={
+              confirmPassword.length > 0 && !passwordsMatch
+                ? "Las contraseñas no coinciden."
+                : undefined
+            }
             required
             disabled={isLoading}
             autoComplete="new-password"
-            aria-invalid={
-              confirmPassword.length > 0 && !passwordsMatch ? true : undefined
-            }
           />
-          {confirmPassword.length > 0 && !passwordsMatch && (
-            <p className="text-[11.5px] text-destructive">
-              Las contraseñas no coinciden.
+
+          <p role="status" className="sr-only">
+            {isLoading ? "Actualizando contraseña…" : ""}
+          </p>
+          <Button
+            type="submit"
+            className={cn(
+              "motria-auth-submit",
+              blocked && "motria-auth-submit-blocked",
+            )}
+            disabled={isLoading || blockedHint !== ""}
+            aria-describedby={blocked ? "change-password-hint" : undefined}
+          >
+            <span>{isLoading ? "Actualizando…" : "Actualizar contraseña"}</span>
+            <span className="motria-auth-submit-icon" aria-hidden="true">
+              {isLoading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <ArrowRight className="size-4" />
+              )}
+            </span>
+          </Button>
+          {blocked && (
+            <p
+              id="change-password-hint"
+              className="-mt-3 text-xs text-muted-foreground"
+            >
+              {blockedHint}
             </p>
           )}
-        </div>
-
-        <Button
-          type="submit"
-          className="mt-1 h-10 w-full"
-          disabled={isLoading || !allPassed || !passwordsMatch}
-        >
-          {isLoading ? (
-            <span className="flex items-center gap-2">
-              <Loader2 className="size-4 animate-spin" />
-              Actualizando…
-            </span>
-          ) : (
-            "Actualizar contraseña"
-          )}
-        </Button>
-      </form>
-    </div>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

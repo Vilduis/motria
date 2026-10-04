@@ -42,6 +42,10 @@ const STATUS_BADGE: Record<
   TERMINADO: { variant: "done", label: "Terminado" },
 }
 
+function capitalizeFirst(text: string) {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
 function getGreeting() {
   const h = new Date().getHours()
   if (h < 12) return "Buenos días"
@@ -104,16 +108,13 @@ function StatusBreakdownPanel({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-5 pt-0">
-        {/* Total + segmented bar */}
         <div className="space-y-3">
           <div className="flex items-baseline justify-between">
             <span className="text-eyebrow">Total activas</span>
-            <span className="text-num text-2xl font-semibold tracking-[-0.02em]">
-              {total}
-            </span>
+            <span className="text-stat">{total}</span>
           </div>
 
-          <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-muted/60">
+          <div className="flex h-2 w-full gap-0.5 overflow-hidden rounded-full bg-muted">
             {total === 0 ? (
               <div className="h-full w-full bg-border/60" />
             ) : (
@@ -149,7 +150,6 @@ function StatusBreakdownPanel({
           </div>
         </div>
 
-        {/* Row breakdown */}
         <ul className="flex flex-col gap-2.5">
           {rows.map((row) => (
             <li
@@ -182,7 +182,7 @@ function DashboardSkeleton() {
         </div>
         <Skeleton className="h-8 w-32" />
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-[124px] rounded-xl" />
         ))}
@@ -325,12 +325,11 @@ export default function DashboardHome() {
 
   return (
     <PageShell>
-      {/* ── ZONE 1: Header ───────────────────────────────────────── */}
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
         <div className="space-y-1">
           <h1 className="text-h1">
             {getGreeting()},{" "}
-            <span className="text-muted-foreground">{userName}</span>
+            <span className="text-brand">{userName}</span>
           </h1>
           <p className="text-body-sm text-muted-foreground">
             {isAdmin
@@ -339,22 +338,21 @@ export default function DashboardHome() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-caption hidden text-foreground/55 sm:inline">
-            {format(new Date(), "EEEE, dd MMM", { locale: es })}
+          <span className="text-caption hidden sm:inline">
+            {capitalizeFirst(format(new Date(), "EEEE, dd MMM", { locale: es }))}
           </span>
-          <Button asChild size="sm">
+          <Button asChild>
             <Link to="/dashboard/orders">
-              <Plus className="size-3.5" />
+              <Plus className="size-4" />
               Nueva orden
             </Link>
           </Button>
         </div>
       </div>
 
-      {/* ── ZONE 2: Stats row ────────────────────────────────────── */}
       <div
         className={cn(
-          "grid gap-4 md:grid-cols-2",
+          "grid grid-cols-2 gap-3 md:gap-4",
           isAdmin ? "lg:grid-cols-4" : "lg:grid-cols-3",
         )}
       >
@@ -363,9 +361,7 @@ export default function DashboardHome() {
         ))}
       </div>
 
-      {/* ── ZONE 3: Activity + Status ────────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-7">
-        {/* Recent activity */}
         <Card className="col-span-7 md:col-span-4">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div className="space-y-1">
@@ -379,7 +375,7 @@ export default function DashboardHome() {
             <Button variant="ghost" size="sm" asChild>
               <Link
                 to="/dashboard/orders"
-                className="text-xs text-muted-foreground"
+                className="text-xs text-brand hover:text-brand"
               >
                 Ver todas
                 <ArrowRight className="size-3" />
@@ -389,7 +385,7 @@ export default function DashboardHome() {
           <CardContent className="pt-0">
             {!recentOrders || recentOrders.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
-                <ClipboardList className="size-7 opacity-25" />
+                <ClipboardList className="size-7 opacity-40" />
                 <p className="text-sm">Sin actividad reciente</p>
               </div>
             ) : (
@@ -438,7 +434,6 @@ export default function DashboardHome() {
           </CardContent>
         </Card>
 
-        {/* Status breakdown */}
         <div className="col-span-7 md:col-span-3">
           <StatusBreakdownPanel
             title={isAdmin ? "Estado del taller" : "Mi estado"}

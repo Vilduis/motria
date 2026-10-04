@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { Link } from "react-router-dom"
 import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -91,7 +92,6 @@ export default function AccountPage() {
         description="Gestiona tu perfil y la configuración de tu taller."
       />
 
-      {/* Identity hero */}
       <Reveal>
         <section className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:gap-5">
           <Avatar className="size-13 rounded-xl">
@@ -123,7 +123,6 @@ export default function AccountPage() {
       </Reveal>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-        {/* Main column */}
         <Reveal delay={0.05} className="flex min-w-0 flex-col gap-5">
           {canManageWorkshop ? (
             <WorkshopSettingsCard
@@ -141,7 +140,6 @@ export default function AccountPage() {
           )}
         </Reveal>
 
-        {/* Side column */}
         <Reveal delay={0.1} className="flex flex-col gap-5">
           {canManageWorkshop && (
             <PlanCard plan={workshop?.plan} loading={loadingWorkshop} />
@@ -174,7 +172,11 @@ function AccountDetailsCard({
       </header>
       <dl className="divide-y divide-border/50">
         <DetailRow icon={<Mail />} label="Correo electrónico" value={email} />
-        <DetailRow icon={<Shield />} label="Rol del sistema" value={roleLabel} />
+        <DetailRow
+          icon={<Shield />}
+          label="Rol del sistema"
+          value={roleLabel}
+        />
         {workshopName && (
           <DetailRow icon={<Building2 />} label="Taller" value={workshopName} />
         )}
@@ -221,9 +223,7 @@ function PlanCard({ plan, loading }: { plan?: string; loading: boolean }) {
               <span className="text-h1 leading-none text-foreground">
                 {planName}
               </span>
-              {isFree && (
-                <span className="text-caption">para siempre</span>
-              )}
+              {isFree && <span className="text-caption">para siempre</span>}
             </>
           )}
         </div>
@@ -234,12 +234,12 @@ function PlanCard({ plan, loading }: { plan?: string; loading: boolean }) {
             ? "Estás en el plan gratuito. Mejora para desbloquear más técnicos, órdenes y reportes."
             : "Tu taller tiene acceso a todas las funciones premium."}
         </p>
-        {isFree && (
-          <Button variant="outline" size="sm" className="w-full">
-            <Sparkles />
-            Mejorar plan
-          </Button>
-        )}
+        <Button variant="outline" size="sm" className="w-full" asChild>
+          <Link to="/dashboard/plan">
+            {isFree && <Sparkles />}
+            {isFree ? "Mejorar plan" : "Ver planes"}
+          </Link>
+        </Button>
       </div>
     </div>
   )
@@ -296,9 +296,7 @@ function SecurityCard() {
           <Lock className="size-4 text-muted-foreground" />
           <h3 className="text-h3 text-foreground">Seguridad</h3>
         </div>
-        <p className="text-caption mt-0.5">
-          Cambia tu contraseña de acceso.
-        </p>
+        <p className="text-caption mt-0.5">Cambia tu contraseña de acceso.</p>
       </header>
       <form onSubmit={handleUpdatePassword} className="space-y-4 p-5">
         <div className="space-y-1.5">
@@ -384,8 +382,7 @@ function WorkshopSettingsCard({
   }, [workshop])
 
   const update =
-    (field: keyof typeof form) =>
-    (e: React.ChangeEvent<HTMLInputElement>) =>
+    (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((prev) => ({ ...prev, [field]: e.target.value }))
 
   const dirty =
@@ -478,7 +475,7 @@ function WorkshopSettingsCard({
                 disabled
                 className="text-muted-foreground"
               />
-              <p className="text-[11px] text-muted-foreground/70">
+              <p className="text-[11px] text-muted-foreground">
                 Para cambiar el correo, contacta a soporte.
               </p>
             </div>
@@ -492,7 +489,7 @@ function WorkshopSettingsCard({
               >
                 <Phone className="size-3.5" />
                 Teléfono
-                <span className="text-[11px] font-normal text-muted-foreground/55">
+                <span className="text-[11px] font-normal text-muted-foreground">
                   opcional
                 </span>
               </Label>
@@ -514,7 +511,7 @@ function WorkshopSettingsCard({
               >
                 <MapPin className="size-3.5" />
                 Dirección
-                <span className="text-[11px] font-normal text-muted-foreground/55">
+                <span className="text-[11px] font-normal text-muted-foreground">
                   opcional
                 </span>
               </Label>

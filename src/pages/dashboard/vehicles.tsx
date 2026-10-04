@@ -19,13 +19,6 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Car, Trash2, Pencil, User as UserIcon } from "lucide-react"
 import vehicleService from "@/services/vehicleService"
@@ -41,6 +34,32 @@ import { DataToolbar } from "@/components/data/data-toolbar"
 import { RowActions } from "@/components/data/row-actions"
 import { ConfirmDialog } from "@/components/data/confirm-dialog"
 import { useTableFilter } from "@/hooks/use-table-filter"
+import { usePagination } from "@/hooks/use-pagination"
+import { EntityCombobox } from "@/components/data/entity-combobox"
+import { DataPagination } from "@/components/data/data-pagination"
+
+type VehicleForm = Omit<DTOVehicle, "year"> & { year: string }
+
+const EMPTY_FORM: VehicleForm = {
+  plate: "",
+  brand: "",
+  model: "",
+  year: "",
+  customerId: 0,
+}
+
+const MIN_YEAR = 1950
+
+/** Accepts 1950 through next year (new models ship with next year's date). */
+function getYearError(value: string): string | undefined {
+  const maxYear = new Date().getFullYear() + 1
+  if (!value) return "Indica el año."
+  const year = Number(value)
+  if (value.length !== 4 || year < MIN_YEAR || year > maxYear) {
+    return `Usa un año entre ${MIN_YEAR} y ${maxYear}.`
+  }
+  return undefined
+}
 
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -50,13 +69,12 @@ export default function VehiclesPage() {
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Vehicle | null>(null)
 
-  const [formData, setFormData] = useState<DTOVehicle>({
-    plate: "",
-    brand: "",
-    model: "",
-    year: new Date().getFullYear(),
-    customerId: 0,
-  })
+  // The year is kept as text so the field can start empty (placeholder only)
+  // and be validated before it becomes a number in the payload.
+  const [formData, setFormData] = useState<VehicleForm>(EMPTY_FORM)
+  const [yearTouched, setYearTouched] = useState(false)
+  const yearError = getYearError(formData.year)
+  const showYearError = yearTouched && yearError !== undefined
 
   const fetchData = async () => {
     try {
@@ -82,22 +100,29 @@ export default function VehiclesPage() {
       `${v.plate} ${v.brand} ${v.model} ${v.year} ${v.customer?.name ?? ""} ${
         v.customer?.lastName ?? ""
       }`,
-    [],
+    []
   )
   const { query, setQuery, filtered } = useTableFilter(vehicles, getSearchable)
+  const pagination = usePagination(filtered, { resetKey: query })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setYearTouched(true)
+    if (yearError) {
+      document.getElementById("year")?.focus()
+      return
+    }
     if (formData.customerId === 0) {
       toast.warning("Por favor, selecciona un cliente")
       return
     }
+    const payload: DTOVehicle = { ...formData, year: Number(formData.year) }
     try {
       if (editingVehicle) {
-        await vehicleService.updateVehicle(editingVehicle.id, formData)
+        await vehicleService.updateVehicle(editingVehicle.id, payload)
         toast.success("Vehículo actualizado correctamente")
       } else {
-        await vehicleService.createVehicle(formData)
+        await vehicleService.createVehicle(payload)
         toast.success("Vehículo registrado correctamente")
       }
       setIsDialogOpen(false)
@@ -127,21 +152,17 @@ export default function VehiclesPage() {
       plate: vehicle.plate,
       brand: vehicle.brand,
       model: vehicle.model,
-      year: vehicle.year,
+      year: String(vehicle.year),
       customerId: vehicle.customer?.id || 0,
     })
+    setYearTouched(false)
     setIsDialogOpen(true)
   }
 
   const resetForm = () => {
     setEditingVehicle(null)
-    setFormData({
-      plate: "",
-      brand: "",
-      model: "",
-      year: new Date().getFullYear(),
-      customerId: 0,
-    })
+    setFormData(EMPTY_FORM)
+    setYearTouched(false)
   }
 
   const newVehicleButton = (
@@ -177,7 +198,7 @@ export default function VehiclesPage() {
                 id="plate"
                 required
                 placeholder="ABC-123"
-                className="font-mono uppercase tracking-wider"
+                className="font-mono tracking-wider uppercase"
                 value={formData.plate}
                 onChange={(e) =>
                   setFormData({
@@ -191,16 +212,27 @@ export default function VehiclesPage() {
               <Label htmlFor="year">Año</Label>
               <Input
                 id="year"
-                type="number"
+                inputMode="numeric"
+                autoComplete="off"
+                maxLength={4}
                 required
+                placeholder="Ej. 2018"
                 value={formData.year}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    year: parseInt(e.target.value),
+                    year: e.target.value.replace(/\D/g, ""),
                   })
                 }
+                onBlur={() => setYearTouched(true)}
+                aria-invalid={showYearError || undefined}
+                aria-describedby={showYearError ? "year-error" : undefined}
               />
+              {showYearError && (
+                <p id="year-error" className="text-xs text-destructive">
+                  {yearError}
+                </p>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -230,28 +262,20 @@ export default function VehiclesPage() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Cliente (dueño)</Label>
-            <Select
-              value={
-                formData.customerId === 0
-                  ? undefined
-                  : formData.customerId.toString()
-              }
-              onValueChange={(val) =>
-                setFormData({ ...formData, customerId: parseInt(val) })
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecciona un cliente" />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((c) => (
-                  <SelectItem key={c.id} value={c.id.toString()}>
-                    {c.name} {c.lastName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="vehicle-customer">Cliente (dueño)</Label>
+            <EntityCombobox
+              id="vehicle-customer"
+              value={formData.customerId}
+              onChange={(id) => setFormData({ ...formData, customerId: id })}
+              options={customers.map((c) => ({
+                value: c.id,
+                label: `${c.name} ${c.lastName}`,
+                description: [c.phone, c.email].filter(Boolean).join(" · "),
+              }))}
+              placeholder="Selecciona un cliente"
+              searchPlaceholder="Buscar por nombre, teléfono o correo"
+              emptyText="Ningún cliente coincide."
+            />
           </div>
           <DialogFooter>
             <DialogClose asChild>
@@ -283,13 +307,13 @@ export default function VehiclesPage() {
         count={loading ? undefined : filtered.length}
       />
 
-      <div className="overflow-hidden rounded-xl border border-border/80 bg-card">
+      <div className="scroll-mt-16 overflow-hidden rounded-xl border border-border/80 bg-card">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Vehículo</TableHead>
-              <TableHead>Año</TableHead>
-              <TableHead>Dueño</TableHead>
+              <TableHead className="hidden md:table-cell">Año</TableHead>
+              <TableHead className="hidden md:table-cell">Dueño</TableHead>
               <TableHead className="w-[60px] text-right">
                 <span className="sr-only">Acciones</span>
               </TableHead>
@@ -313,12 +337,12 @@ export default function VehiclesPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((vehicle) => (
+              pagination.pageItems.map((vehicle) => (
                 <TableRow key={vehicle.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-secondary/40">
-                        <Car className="size-4 text-muted-foreground/80" />
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary">
+                        <Car className="size-4 text-muted-foreground" />
                       </div>
                       <div>
                         <div className="text-mono text-[13.5px] font-semibold tracking-wider">
@@ -326,16 +350,22 @@ export default function VehiclesPage() {
                         </div>
                         <div className="text-caption capitalize">
                           {vehicle.brand} {vehicle.model}
+                          <span className="md:hidden"> · {vehicle.year}</span>
+                        </div>
+                        <div className="text-caption md:hidden">
+                          {vehicle.customer
+                            ? `${vehicle.customer.name} ${vehicle.customer.lastName}`
+                            : "Desconocido"}
                         </div>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-num text-muted-foreground">
+                  <TableCell className="text-num hidden text-muted-foreground md:table-cell">
                     {vehicle.year}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <div className="flex items-center gap-1.5 text-[13px]">
-                      <UserIcon className="size-3 shrink-0 text-muted-foreground/70" />
+                      <UserIcon className="size-3 shrink-0 text-muted-foreground" />
                       <span className="text-muted-foreground">
                         {vehicle.customer
                           ? `${vehicle.customer.name} ${vehicle.customer.lastName}`
@@ -366,6 +396,14 @@ export default function VehiclesPage() {
             )}
           </TableBody>
         </Table>
+        <DataPagination
+          page={pagination.page}
+          pageCount={pagination.pageCount}
+          start={pagination.start}
+          end={pagination.end}
+          total={pagination.total}
+          onPageChange={pagination.setPage}
+        />
       </div>
 
       <ConfirmDialog

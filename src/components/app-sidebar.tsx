@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import {
   LayoutDashboard,
   List,
@@ -21,6 +21,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -36,6 +37,13 @@ type RoleAwareItem = {
 
 export function AppSidebar({ onLogout, ...props }: AppSidebarProps) {
   const currentUser = authService.getCurrentUser()
+  const { setOpenMobile } = useSidebar()
+  const { pathname } = useLocation()
+
+  // On phones the sidebar is a sheet: close it once a link has navigated.
+  React.useEffect(() => {
+    setOpenMobile(false)
+  }, [pathname, setOpenMobile])
 
   const userData = {
     name: currentUser.displayName,
@@ -103,20 +111,22 @@ export function AppSidebar({ onLogout, ...props }: AppSidebarProps) {
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader className="border-b border-sidebar-border px-3 py-3">
+      <SidebarHeader className="border-b border-sidebar-border px-3 py-4">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               className="h-auto p-0! hover:bg-transparent!"
             >
-              <Link to="/dashboard" className="flex items-center gap-2.5 py-0.5">
-                <LogoMark size={20} className="text-brand" strokeWidth={2.25} />
-                <div className="flex flex-col min-w-0">
-                  <span className="truncate font-heading text-[15px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
-                    {currentUser.workshopName || "Workshop"}
+              <Link to="/dashboard" className="flex items-center gap-3 py-0.5">
+                <span className="flex size-9 shrink-0 -rotate-8 items-center justify-center rounded-full border-2 border-sidebar-primary text-sidebar-primary">
+                  <LogoMark size={20} strokeWidth={2.7} />
+                </span>
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span className="truncate font-heading text-[19px] font-semibold leading-none tracking-[-0.01em] text-sidebar-accent-foreground">
+                    {currentUser.workshopName || "Motria"}
                   </span>
-                  <span className="truncate text-[10px] leading-tight text-sidebar-foreground/55">
+                  <span className="truncate text-[11px] leading-tight text-sidebar-foreground">
                     {currentUser.roles.includes("ADMIN")
                       ? "Administrador"
                       : "Técnico"}

@@ -1,37 +1,36 @@
-# TallerPro — Sistema de Gestión de Taller Mecánico
+# Motria — Gestión de talleres mecánicos
 
-Aplicación web para la administración integral de talleres de reparación automotriz. Permite gestionar órdenes de servicio, técnicos, clientes y vehículos desde un panel centralizado con control de acceso por roles.
+Motria es una aplicación web para llevar el día a día de un taller mecánico desde un solo lugar: clientes, vehículos, técnicos y órdenes de servicio, con un panel que muestra cómo va el trabajo.
 
----
+## ¿Para quién es?
 
-## Modelo de negocio
+Para **talleres mecánicos pequeños y medianos** que hoy se organizan con cuadernos, hojas de cálculo o mensajes, y quieren dejar de perder órdenes y saber en todo momento qué vehículo está en qué estado.
 
-El sistema está orientado a talleres mecánicos pequeños y medianos que necesitan digitalizar su operación. Cubre el flujo completo de un servicio:
+Dentro de cada taller hay dos tipos de usuario:
 
-1. El **administrador** registra clientes, vehículos, técnicos y crea órdenes de servicio.
-2. El **técnico** recibe sus órdenes asignadas y actualiza el estado conforme avanza el trabajo (`PENDIENTE → EN_PROCESO → TERMINADO`).
-3. El **dashboard** muestra métricas en tiempo real: ocupación del taller, órdenes del día, nuevos clientes y vehículos de la semana.
-
-**Roles del sistema:**
-
-| Rol | Permisos |
+| Rol | Qué hace |
 |---|---|
-| `ADMIN` | CRUD completo sobre usuarios, técnicos, clientes, vehículos y órdenes. Acceso a métricas globales. |
-| `TECNICO` | Consulta de órdenes asignadas y actualización de estado. Dashboard de carga de trabajo personal. |
+| **Administrador** | Registra clientes, vehículos y técnicos, crea órdenes de servicio y las asigna. Ve el resumen de todo el taller y gestiona el plan de su cuenta. |
+| **Técnico** | Ve las órdenes que tiene asignadas y actualiza su estado a medida que avanza el trabajo. |
 
----
+## ¿Cómo funciona?
 
-## Backend API
+1. El taller se registra y el administrador da de alta a sus técnicos.
+2. Cuando llega un vehículo, se registra con su dueño (o se busca si ya existe) y se crea una orden de servicio con el diagnóstico.
+3. El técnico asignado avanza la orden: `Pendiente → En proceso → Terminado`.
+4. El panel de inicio muestra órdenes del día, trabajo pendiente y la actividad reciente.
 
-El frontend consume una API REST desarrollada en **Java Spring Boot**. La seguridad está gestionada con **Spring Security** y autenticación stateless mediante **JWT**: al iniciar sesión el servidor emite un token que el cliente almacena en `localStorage` y adjunta en cada petición a través de un interceptor de Axios (`Authorization: Bearer <token>`). Si el servidor devuelve un `401`, el interceptor limpia el storage y redirige automáticamente al login.
+## Funciones
 
-La URL base se configura mediante variable de entorno:
+- **Landing pública** que presenta el producto, con una demostración interactiva de órdenes.
+- **Registro e inicio de sesión**, recuperación y cambio de contraseña.
+- **Panel** con resumen del taller para el administrador y carga de trabajo para el técnico.
+- **Clientes, vehículos, técnicos, usuarios y órdenes**, con búsqueda y paginación.
+- **Órdenes rápidas de crear**: se elige el vehículo (buscando por placa, marca o dueño) y el cliente se completa solo.
+- **Planes** Free y Pro (por ahora solo visual).
+- **Tema claro y oscuro**, y diseño adaptado a móvil.
 
-```env
-VITE_API_BASE_URL=http://localhost:8080/api
-```
-
----
+Los datos se obtienen de una **API REST** propia de Motria.
 
 ## Stack
 
@@ -43,47 +42,34 @@ VITE_API_BASE_URL=http://localhost:8080/api
 | Estilos | Tailwind CSS v4 |
 | Componentes | shadcn/ui + Radix UI |
 | HTTP client | Axios |
-| Tablas | TanStack Table v8 |
-| Gráficas | Recharts |
-| Drag & Drop | dnd-kit |
 | Fechas | date-fns |
 | Notificaciones | Sonner |
-| Temas | next-themes (dark / light) |
-| Validación | Zod |
+| Animaciones | Motion |
+| Temas | ThemeProvider propio (claro / oscuro, sigue al sistema) |
 | Iconos | Lucide React |
-| Fuente | Geist Variable |
+| Fuentes | Manrope Variable + Barlow Condensed (self-hosted) |
 | Linting | ESLint + typescript-eslint |
 | Formateo | Prettier + prettier-plugin-tailwindcss |
 
----
-
-## Inicio rápido
-
-```bash
-npm install
-npm run dev
-```
-
-### Scripts disponibles
-
-| Comando | Descripción |
-|---|---|
-| `npm run dev` | Servidor de desarrollo |
-| `npm run build` | Compilación de producción |
-| `npm run preview` | Vista previa del build |
-| `npm run typecheck` | Verificación de tipos sin emitir |
-| `npm run lint` | Análisis estático de código |
-| `npm run format` | Formateo automático con Prettier |
-
----
-
-## Estructura principal
+## Estructura del proyecto
 
 ```
 src/
-├── components/   # Componentes compartidos y de UI
-├── pages/        # Vistas por ruta (dashboard, login, etc.)
-├── hooks/        # Custom hooks
-├── lib/          # Utilidades y configuración de Axios
-└── types/        # Tipos e interfaces TypeScript
+├── pages/            # Una vista por ruta
+│   ├── landing.tsx   # Página pública
+│   ├── login.tsx, signup.tsx, …   # Acceso y contraseñas
+│   └── dashboard/    # Panel: inicio, órdenes, clientes, vehículos, técnicos, usuarios, cuenta y planes
+├── components/
+│   ├── ui/           # Componentes base de shadcn/ui
+│   ├── landing/      # Secciones de la landing
+│   ├── auth/         # Formularios de acceso
+│   ├── layout/       # Estructura de páginas del panel y del acceso
+│   ├── data/         # Tablas: búsqueda, paginación, selectores con búsqueda
+│   └── stats/        # Tarjetas de métricas
+├── services/         # Llamadas a la API (una por recurso) y configuración de Axios
+├── hooks/            # Hooks propios (paginación, tema, plan del taller)
+├── lib/              # Utilidades y validaciones
+├── styles/           # Tokens de diseño, tipografía y estilos de landing y acceso
+└── types/            # Tipos de los datos de la API
+public/images/        # Fotografías de la landing (fuentes en ASSETS.md)
 ```

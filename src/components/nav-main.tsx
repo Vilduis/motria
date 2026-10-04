@@ -34,7 +34,7 @@ export function NavMain({ sections }: { sections: NavSection[] }) {
           className={cn(idx === 0 ? "pt-1" : "pt-3", "pb-1")}
         >
           {section.label && (
-            <SidebarGroupLabel className="text-eyebrow mb-1 px-2.5 text-sidebar-foreground/45">
+            <SidebarGroupLabel className="text-eyebrow mb-1 px-2.5 text-sidebar-foreground/80">
               {section.label}
             </SidebarGroupLabel>
           )}
@@ -47,13 +47,13 @@ export function NavMain({ sections }: { sections: NavSection[] }) {
                     asChild
                     isActive={isActive(item.url)}
                     className={cn(
-                      "h-8 gap-2.5 px-2.5 text-[13.5px] font-medium text-sidebar-foreground/75",
+                      "h-9 gap-2.5 rounded-full px-3 text-[13.5px] font-medium text-sidebar-foreground",
                       "transition-colors duration-150 ease-(--ease-out-quart)",
-                      "hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
+                      "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                       "data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground data-active:font-semibold",
-                      "[&>svg]:size-4 [&>svg]:text-sidebar-foreground/55",
-                      "hover:[&>svg]:text-sidebar-foreground/85",
-                      "data-active:[&>svg]:text-brand",
+                      "[&>svg]:size-4 [&>svg]:text-sidebar-foreground/75",
+                      "hover:[&>svg]:text-sidebar-accent-foreground",
+                      "data-active:[&>svg]:text-sidebar-primary",
                     )}
                   >
                     <Link to={item.url}>

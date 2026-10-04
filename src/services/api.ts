@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+const BASE_URL = import.meta.env.MOTRIA_API_URL || 'http://localhost:8080/api';
 
 // Instancia base de Axios
 const api = axios.create({
@@ -23,7 +23,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        // Un acceso rechazado debe conservar el formulario y su mensaje de error.
+        const isPublicAuthRequest = ['/auth/login', '/auth/register-workshop', '/auth/forgot-password'].includes(
+            error.config?.url ?? ''
+        );
+        if (error.response?.status === 401 && !isPublicAuthRequest) {
             localStorage.removeItem('jwtToken');
             localStorage.removeItem('userId');
             localStorage.removeItem('authorities');

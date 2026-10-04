@@ -41,6 +41,8 @@ import { DataToolbar } from "@/components/data/data-toolbar"
 import { RowActions } from "@/components/data/row-actions"
 import { ConfirmDialog } from "@/components/data/confirm-dialog"
 import { useTableFilter } from "@/hooks/use-table-filter"
+import { usePagination } from "@/hooks/use-pagination"
+import { DataPagination } from "@/components/data/data-pagination"
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -77,6 +79,7 @@ export default function CustomersPage() {
     [],
   )
   const { query, setQuery, filtered } = useTableFilter(customers, getSearchable)
+  const pagination = usePagination(filtered, { resetKey: query })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -248,13 +251,13 @@ export default function CustomersPage() {
         count={loading ? undefined : filtered.length}
       />
 
-      <div className="overflow-hidden rounded-xl border border-border/80 bg-card">
+      <div className="scroll-mt-16 overflow-hidden rounded-xl border border-border/80 bg-card">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Cliente</TableHead>
-              <TableHead>Correo</TableHead>
-              <TableHead>Teléfono</TableHead>
+              <TableHead className="hidden md:table-cell">Correo</TableHead>
+              <TableHead className="hidden md:table-cell">Teléfono</TableHead>
               <TableHead className="w-[60px] text-right">
                 <span className="sr-only">Acciones</span>
               </TableHead>
@@ -278,25 +281,30 @@ export default function CustomersPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((customer) => (
+              pagination.pageItems.map((customer) => (
                 <TableRow key={customer.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-subtle text-[11px] font-semibold text-brand">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-[11px] font-semibold text-secondary-foreground">
                         {initials(customer.name, customer.lastName)}
                       </div>
-                      <span className="font-medium">
-                        {customer.name} {customer.lastName}
-                      </span>
+                      <div className="min-w-0">
+                        <span className="font-medium">
+                          {customer.name} {customer.lastName}
+                        </span>
+                        <div className="text-caption truncate md:hidden">
+                          {customer.phone} · {customer.email}
+                        </div>
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
                       <Mail className="size-3 shrink-0" />
                       {customer.email}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
                       <Phone className="size-3 shrink-0" />
                       {customer.phone}
@@ -325,6 +333,14 @@ export default function CustomersPage() {
             )}
           </TableBody>
         </Table>
+        <DataPagination
+          page={pagination.page}
+          pageCount={pagination.pageCount}
+          start={pagination.start}
+          end={pagination.end}
+          total={pagination.total}
+          onPageChange={pagination.setPage}
+        />
       </div>
 
       <ConfirmDialog

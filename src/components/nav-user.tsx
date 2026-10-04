@@ -15,7 +15,15 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { ChevronsUpDown, CircleUserRound, LogOut } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { useWorkshopPlan } from "@/hooks/use-workshop-plan"
+import {
+  ChevronsUpDown,
+  CircleUserRound,
+  Gem,
+  LogOut,
+  Sparkles,
+} from "lucide-react"
 
 const ROLE_LABEL: Record<string, string> = {
   ADMIN: "Administrador",
@@ -35,6 +43,7 @@ export function NavUser({
   onLogout?: () => void
 }) {
   const { isMobile } = useSidebar()
+  const { plan, enabled: planEnabled } = useWorkshopPlan()
   const initials = user.name.substring(0, 2).toUpperCase()
   const roleLabel = ROLE_LABEL[user.roles?.[0] || ""] || "Usuario"
 
@@ -45,23 +54,23 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="h-12 gap-2.5 rounded-lg px-2 transition-colors duration-150 hover:bg-sidebar-accent/70 data-[state=open]:bg-sidebar-accent"
+              className="h-12 gap-2.5 rounded-xl px-2 transition-colors duration-150 hover:bg-sidebar-accent data-[state=open]:bg-sidebar-accent"
             >
-              <Avatar className="size-7 rounded-md">
+              <Avatar className="size-8 rounded-full">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-md bg-brand-subtle text-[10.5px] font-semibold text-brand">
+                <AvatarFallback className="rounded-full bg-sidebar-accent text-[11px] font-semibold text-sidebar-accent-foreground">
                   {initials}
                 </AvatarFallback>
               </Avatar>
               <div className="grid min-w-0 flex-1 text-left leading-tight">
-                <span className="truncate text-[13px] font-semibold text-foreground">
+                <span className="truncate text-[13px] font-semibold text-sidebar-accent-foreground">
                   {roleLabel}
                 </span>
-                <span className="truncate text-[11px] text-sidebar-foreground/60">
+                <span className="truncate text-[11px] text-sidebar-foreground">
                   {user.email}
                 </span>
               </div>
-              <ChevronsUpDown className="ml-auto size-3.5 shrink-0 text-sidebar-foreground/40" />
+              <ChevronsUpDown className="ml-auto size-3.5 shrink-0 text-sidebar-foreground/70" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -72,9 +81,9 @@ export function NavUser({
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2.5 px-2 py-2 text-left">
-                <Avatar className="size-9 rounded-md">
+                <Avatar className="size-9 rounded-full">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-md bg-brand-subtle text-xs font-semibold text-brand">
+                  <AvatarFallback className="rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -88,6 +97,38 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
+            {planEnabled && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to="/dashboard/plan"
+                      className="flex w-full items-center gap-2 text-[13px]"
+                    >
+                      <Gem className="size-4 text-muted-foreground" />
+                      Plan
+                      {plan && (
+                        <Badge variant="secondary" className="ml-auto">
+                          {plan === "PRO" ? "Pro" : "Free"}
+                        </Badge>
+                      )}
+                    </Link>
+                  </DropdownMenuItem>
+                  {plan === "FREE" && (
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/dashboard/plan"
+                        className="flex w-full items-center gap-2 text-[13px]"
+                      >
+                        <Sparkles className="size-4 text-muted-foreground" />
+                        Mejorar a Pro
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuGroup>
+              </>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>

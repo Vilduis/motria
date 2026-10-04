@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom"
 import { ChangePasswordForm } from "@/components/auth/change-password-form"
-import { AuthShell } from "@/components/layout/auth-shell"
+import { MotriaAuthShell } from "@/components/layout/motria-auth-shell"
 
 export default function ChangePasswordPage() {
   const navigate = useNavigate()
@@ -10,8 +10,8 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <AuthShell maxWidth="max-w-sm" showBrand>
+    <MotriaAuthShell variant="change-password">
       <ChangePasswordForm onChangeSuccess={handleChangeSuccess} />
-    </AuthShell>
+    </MotriaAuthShell>
   )
 }

@@ -1,0 +1,58 @@
+@import "@fontsource/barlow-condensed/latin-500.css";
+@import "@fontsource/barlow-condensed/latin-600.css";
+@import "@fontsource/barlow-condensed/latin-700.css";
+@import "@fontsource-variable/manrope";
+
+.motria-landing,
+.motria-auth {
+  --background: #ffffff;
+  --foreground: #202125;
+  --card: #ffffff;
+  --card-foreground: #202125;
+  --popover: #ffffff;
+  --popover-foreground: #202125;
+  --primary: #cf233a;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f3f3;
+  --secondary-foreground: #202125;
+  --muted: #f5f5f5;
+  --muted-foreground: #65666c;
+  --accent: #fbecef;
+  --accent-foreground: #b51d31;
+  --border: #e6e6e7;
+  --input: #dedee0;
+  --ring: #cf233a;
+  --brand: #cf233a;
+  --brand-subtle: #fbecef;
+  --shadow-sm-value: 0 2px 5px rgb(25 27 32 / 0.06);
+  --shadow-xs-value: 0 1px 2px rgb(25 27 32 / 0.04);
+  --shadow-elevated-value: 0 12px 32px rgb(25 27 32 / 0.12);
+  --font-sans: "Manrope Variable", sans-serif;
+  color-scheme: light;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+.motria-heading,
+.motria-section-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.motria-wordmark {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.motria-mark {
+  color: var(--primary);
+  transform: rotate(-8deg);
+}

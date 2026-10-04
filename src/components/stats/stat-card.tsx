@@ -48,31 +48,34 @@ export function StatCard({
         ease: [0.16, 1, 0.3, 1],
         delay: index * 0.06,
       }}
+      className="h-full"
     >
       <Card
         className={cn(
-          "transition-shadow duration-200 ease-(--ease-out-quart) hover:shadow-elevated",
+          "h-full transition-shadow duration-200 ease-(--ease-out-quart) hover:shadow-elevated",
           className,
         )}
       >
-        <CardContent className="pb-5 pt-5">
+        <CardContent className="py-1 sm:py-1.5">
           <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 space-y-1.5">
+            <div className="min-w-0 space-y-2.5">
               <p className="text-eyebrow">{title}</p>
-              <p className="text-num text-[28px] font-semibold leading-none tracking-[-0.02em]">
+              <p className="text-stat text-foreground">
                 {isNumeric ? <AnimatedNumber value={value} /> : value}
               </p>
             </div>
-            <div className="shrink-0 rounded-lg border border-border/70 bg-secondary/40 p-2 text-muted-foreground/80">
+            <div className="hidden size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground sm:flex">
               {icon}
             </div>
           </div>
           {(description || trend) && (
-            <div className="mt-4 border-t border-border/50 pt-3">
+            <div className="mt-4 border-t border-border pt-3">
               <p className="text-caption">
-                {description}
+                <span className={trend ? "hidden sm:inline" : undefined}>
+                  {description}
+                </span>
                 {trend && (
-                  <span className="ml-1.5 font-medium text-brand">{trend}</span>
+                  <span className="font-semibold text-foreground sm:ml-1.5">{trend}</span>
                 )}
               </p>
             </div>

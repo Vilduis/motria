@@ -46,14 +46,14 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-fit items-center justify-between gap-2 rounded-lg border border-input bg-transparent py-2 pr-2 pl-3 text-sm whitespace-nowrap text-foreground transition-[border-color,box-shadow,background-color] duration-150 ease-(--ease-out-quart) outline-none select-none",
-        "hover:border-input/80 dark:hover:border-input",
-        "focus-visible:border-brand/55 focus-visible:bg-background focus-visible:ring-[3px] focus-visible:ring-brand/15 dark:focus-visible:bg-white/[0.04]",
+        "flex w-fit items-center justify-between gap-2 rounded-lg border border-input bg-card py-2 pr-2 pl-3 text-sm whitespace-nowrap text-foreground transition-[border-color,box-shadow,background-color] duration-150 ease-(--ease-out-quart) outline-none select-none",
+        "hover:border-muted-foreground",
+        "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20",
         "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-40",
         "aria-invalid:border-destructive/60 aria-invalid:ring-[3px] aria-invalid:ring-destructive/15",
-        "data-placeholder:text-muted-foreground/55 data-placeholder:font-normal",
-        "data-[state=open]:border-brand/55 data-[state=open]:ring-[3px] data-[state=open]:ring-brand/15",
-        "data-[size=default]:h-9 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-[size=sm]:px-2.5",
+        "data-placeholder:text-muted-foreground data-placeholder:font-normal",
+        "data-[state=open]:border-ring data-[state=open]:ring-[3px] data-[state=open]:ring-ring/20",
+        "data-[size=default]:h-9 data-[size=sm]:h-7 data-[size=sm]:rounded-full data-[size=sm]:px-2.5",
         "*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5",
         "dark:bg-white/[0.025]",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",

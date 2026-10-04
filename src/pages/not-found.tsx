@@ -17,9 +17,11 @@ export default function NotFoundPage() {
           to="/"
           className="flex items-center gap-2 transition-opacity hover:opacity-90"
         >
-          <LogoMark size={18} className="text-brand" />
-          <span className="font-heading text-[15px] font-semibold tracking-[-0.01em]">
-            Workshop
+          <span className="flex size-8 -rotate-8 items-center justify-center rounded-full border-2 border-brand text-brand">
+            <LogoMark size={17} strokeWidth={2.7} />
+          </span>
+          <span className="font-heading text-2xl font-bold leading-none tracking-[-0.03em]">
+            motria<span className="text-brand">.</span>
           </span>
         </Link>
         <ModeToggle />
@@ -33,7 +35,7 @@ export default function NotFoundPage() {
           className="max-w-md text-center"
         >
           <p className="text-eyebrow mb-3 text-brand">Error 404</p>
-          <h1 className="text-display text-[clamp(2rem,4.5vw,3rem)]">
+          <h1 className="text-display">
             Página no encontrada
           </h1>
           <p className="mx-auto mt-4 max-w-sm text-body text-muted-foreground">
@@ -70,7 +72,7 @@ export default function NotFoundPage() {
       </main>
 
       <footer className="border-t border-border/40 px-5 py-4 text-center text-[11.5px] text-muted-foreground/55 md:px-8">
-        © {new Date().getFullYear()} Workshop
+        © {new Date().getFullYear()} Motria
       </footer>
     </div>
   )
